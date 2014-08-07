@@ -1,0 +1,2 @@
+g++ `root-config --cflags` countLoop.C -c
+g++ `root-config --cflags` Run.C countLoop.o -o run.exe `root-config --libs`

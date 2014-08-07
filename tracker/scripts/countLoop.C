@@ -2,15 +2,17 @@
 #include "countLoop.h"
 #include <TH2.h>
 #include <TStyle.h>
+#include <TMath.h>
 #include <TCanvas.h>
 #include <string>
-
+#include <iostream>
+using namespace std;
 void countLoop::Loop()
 {
   std::string title[2]={"Barrel","Endcap"};
   std::string subtitle[2]={"Layer","Disk"};
   TH1F* hcount_1d = new TH1F("hcount_1d","",5, 0.5,5.5);
-  TH1F* htof = new TH1F("htof","",100,50,50);
+  TH1F* htof = new TH1F("htof","",100000,0.01,100);
   TH1F* h[2][15];
   TH1F* ht[2][15];
   for(int k=0;k<2; k++){
@@ -19,12 +21,12 @@ void countLoop::Loop()
       h[k][i]=(TH1F*)hcount_1d->Clone(Form("h%d%02i",k,i));
       h[k][i]->SetXTitle("Number of crossings per particle");
       h[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
-			       subtitle[k].data(),i+1));
+			     subtitle[k].data(),i+1));
 
       ht[k][i]=(TH1F*)htof->Clone(Form("ht%d%02i",k,i));
       ht[k][i]->SetXTitle("Difference of TOF from the first hit: ns");
       ht[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
-			       subtitle[k].data(),i+1));
+			      subtitle[k].data(),i+1));
 
     }
   }
@@ -47,7 +49,7 @@ void countLoop::Loop()
   if (fChain == 0) return;
   
   Long64_t nentries = fChain->GetEntriesFast();
-  //nentries = 10;
+  //nentries = 20;
   Long64_t nbytes = 0, nb = 0;
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       Long64_t ientry = LoadTree(jentry);
@@ -67,48 +69,46 @@ void countLoop::Loop()
 	int hitLayerIndex = hitLayer->at(i)-1;
 	int hitDiskIndex = hitDisk->at(i)-1;
 
-	std::cout<< hitSubDec->size()
-		 <<"  "<<hitEntryPointX->size()
-		 <<"  "<<hitExitPointX->size()
-		 <<" hitGlobalEta = "<<(*hitGlobalEta)[i]
-		 <<" hitGlobalPhi = "<<(*hitGlobalPhi)[i]
+	std::cout<<" Eta = "<<(*hitGlobalEta)[i]
+		 <<" Phi = "<<(*hitGlobalPhi)[i]
+		 <<" X = "<<(*hitGlobalX)[i]
+		 <<" Y = "<<(*hitGlobalY)[i]
+		 <<" Z = "<<(*hitGlobalZ)[i]
+		 <<" rho = "<<Rho((*hitGlobalX)[i],(*hitGlobalY)[i])
 		 <<" X = "<<(*hitGlobalDirectionX)[i]
 		 <<" Y = "<<(*hitGlobalDirectionY)[i]
 		 <<" Z = "<<(*hitGlobalDirectionZ)[i]
-		 <<" hitSubDec = "<<hitSubDec->at(i)
-		 <<" hitPID = "<<hitPID->at(i)
-	  //<<" Rentry = "<<Rentry
-	  //	 <<" Rexit = "<<Rexit
 		 <<" hitLayerIndex = "<<hitLayerIndex
 		 <<" hitDiskIndex = "<<hitDiskIndex
+		 <<" tof = "<<hitTof->at(i)
 		 <<std::endl;
 	
 	if(hitSubDec->at(i)==1) // for barrel 
 	  {
-	    if(Rentry < Rexit && countB[hitLayerIndex]>0)    std::cout<<" already one hit for this layer "<<hitLayerIndex<<"   "<<countB[hitLayerIndex]<<std::endl;
-	    if(Rentry < Rexit && countB[hitLayerIndex]==0)   countB[hitLayerIndex]++;
-	    if(Rentry > Rexit)   countB[hitLayerIndex]++;
-	    
-	    if(countB[hitLayerIndex]==1)
-	      tofB[hitLayerIndex]= hitTof->at(i);
-	    else if(countB[hitLayerIndex]>1)
-	      ht[0][hitLayerIndex]->Fill(hitTof->at(i)-tofB[hitLayerIndex]);
+	    //if(Rentry < Rexit && countB[hitLayerIndex]>0)    std::cout<<" already one hit for this layer "<<hitLayerIndex<<"   "<<countB[hitLayerIndex]<<std::endl;
+	    //if(Rentry < Rexit && countB[hitLayerIndex]==0)   countB[hitLayerIndex]++;
+	    //if(Rentry > Rexit)   countB[hitLayerIndex]++;
+	    //if(countB[hitLayerIndex]==1)
+	    //  tofB[hitLayerIndex]= hitTof->at(i);
+	    //else if(countB[hitLayerIndex]>1)
+	    //  ht[0][hitLayerIndex]->Fill(hitTof->at(i)-tofB[hitLayerIndex]);
+
+	    countB[hitLayerIndex]++;
+	    ht[0][hitLayerIndex]->Fill(hitTof->at(i));
 	  }
 	else
 	  if(hitSubDec->at(i)==2) // for endcap
 	    {
-	      if(Rentry < Rexit && countE[hitDiskIndex]==0)   countE[hitDiskIndex]++;
-	      if(Rentry < Rexit && countE[hitDiskIndex]>0)    std::cout<<" already one hit for this dosc endcap"<<std::endl;
-	      if(Rentry > Rexit)   countE[hitDiskIndex]++;
-
-	      //if((*hitEntryPointZ)[i]  < (*hitEntryPointZ)[i] && countE[hitDiskIndex]==0)   countE[hitDiskIndex]++;
-	      //if((*hitEntryPointZ)[i]  < (*hitEntryPointZ)[i]  && countE[hitDiskIndex]>0)    std::cout<<" already one hit for this dosc endcap"<<std::endl;
-	      //if((*hitEntryPointZ)[i]  > (*hitEntryPointZ)[i] )   countE[hitDiskIndex]++;
-	      //countE[hitDiskIndex]++;
-	      if(countE[hitDiskIndex]==1)
-		tofE[hitDiskIndex]= hitTof->at(i);
-	      else if(countE[hitDiskIndex]>1)
-		ht[1][hitDiskIndex]->Fill(hitTof->at(i)-tofE[hitDiskIndex]);
+	      //if(Rentry < Rexit && countE[hitDiskIndex]==0)   countE[hitDiskIndex]++;
+	      //if(Rentry < Rexit && countE[hitDiskIndex]>0)    std::cout<<" already one hit for this dosc endcap"<<std::endl;
+	      //if(Rentry > Rexit)   countE[hitDiskIndex]++;
+	      //
+	      //if(countE[hitDiskIndex]==1)
+	      //tofE[hitDiskIndex]= hitTof->at(i);
+	      //else if(countE[hitDiskIndex]>1)
+	      //ht[1][hitDiskIndex]->Fill(hitTof->at(i)-tofE[hitDiskIndex]);
+	      countE[hitDiskIndex]++;
+	      ht[1][hitDiskIndex]->Fill(hitTof->at(i));
 	    }
       }
    
@@ -130,7 +130,7 @@ void countLoop::Loop()
 
    hbarrel->Draw();
    hendcap->Draw();
-   TFile* outFile = new TFile(outputfile_.data(),"recreate");       
+   TFile* outFile = new TFile(outputfile_,"recreate");       
    
    hbarrel->Write();
    hendcap->Write();
@@ -152,6 +152,6 @@ void countLoop::Loop()
 
 
 double countLoop::Rho(double x, double y){
-  double r = sqrt( (x*x) + (y*y) );
+  double r = TMath::Sqrt( (x*x) + (y*y) );
   return r;
 }

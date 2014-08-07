@@ -11,16 +11,16 @@
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
-
+#include <algorithm>
 // Header file for the classes stored in the TTree if any.
 #include <vector>
 #include <string>
-
+using namespace std;
 // Fixed size dimensions of array or collections stored in the TTree if any.
 
 class countLoop {
 public :
-  std::string outputfile_;
+  TString outputfile_;
   TTree          *fChain;   //!pointer to the analyzed TTree or TChain
    Int_t           fCurrent; //!current Tree number in a TChain
    
@@ -146,7 +146,7 @@ public :
    TBranch        *b_hitPanel;   //!
    TBranch        *b_hitModule;   //!
 
-   countLoop(std::string inputfile, std::string outputfile, TTree *tree=0);
+   countLoop(TString inputfile, TString outputfile, TTree *tree=0);
    virtual ~countLoop();
    virtual Int_t    Cut(Long64_t entry);
    virtual Int_t    GetEntry(Long64_t entry);
@@ -161,17 +161,18 @@ public :
 #endif
 
 #ifdef countLoop_cxx
-countLoop::countLoop(std::string inputfile, std::string outputfile, TTree *tree) : fChain(0) 
+countLoop::countLoop(TString inputfile, TString outputfile, TTree *tree) : fChain(0) 
 {
   outputfile_ = outputfile;
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-     TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(inputfile.data());
+     TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(inputfile);
      if (!f || !f->IsOpen()) {
-       f = new TFile(inputfile.data());
+       f = new TFile(inputfile);
      }
-     TDirectory * dir = (TDirectory*)f->Get(Form("%s:/tree",inputfile.data()));
+     //TDirectory * dir = (TDirectory*)f->Get(Form("%s:/tree",inputfile));
+     TDirectory * dir = (TDirectory*)f->Get(inputfile+":/tree");
      dir->GetObject("tree",tree);
      
    }
