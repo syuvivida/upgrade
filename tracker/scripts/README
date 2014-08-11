@@ -10,4 +10,4 @@
 >>>> changed bins for crossing multiplicity histograms, time of flight, 2d occupancy.
 >>>> add R_vs_Z and X_vs_Y histograms. 
 >>>> change the absolute TOF --> absolute TOF - time taken in travelling the sim-hit.
->>>> 
+>>>> Added profile plots for each particle id for barrel and endcap.

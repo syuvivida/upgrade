@@ -12,7 +12,7 @@
 using namespace std;
 void countLoop::Loop()
 {
-  bool debug = true;
+  bool debug = false;
   bool onlyMuons = false; // true : save information of muons only 
                           // false : save information of all the particles in the tree
   
@@ -35,7 +35,7 @@ void countLoop::Loop()
   std::string subtitle[2]={"Layer","Disk"};
   TH1F* hcount_1d = new TH1F("hcount_1d","",100, 0.5,100.5);
   TH1F* htof      = new TH1F("htof","",1000,0.1,100);
-  TProfile* hdistance = new TProfile("hdistance","hdistance",15, 0.5, 15.5,0,500);
+  TProfile* hdistance = new TProfile("hdistance","hdistance",15, 0, 15,0,500);
   TH1F* hrho      = new TH1F("hrho","hrho",300, 0.5, 300.5);
   
   TH2F* hZ_vs_R   = new TH2F("hZ_vs_R","hZ_vs_R", 600, -300, 300, 120, 0, 120);
@@ -48,8 +48,8 @@ void countLoop::Loop()
   for(int k=0;k<2; k++){
     for(int i=0;i<(int)pdgid_.size();i++){
       hDistance[k][i] = (TProfile*)hdistance->Clone(Form("hDistance_%s_%d",title[k].data(), pdgid_[i]));
-      hDistance[k][i]->SetXTitle("distance (in mm)");
-      hDistance[k][i]->SetTitle(Form("distance for particle ",pdgid_[i]));
+      hDistance[k][i]->SetXTitle("layer/disk number");
+      hDistance[k][i]->SetTitle(Form("distance for particle %d",pdgid_[i]));
     }
   }
   for(int k=0;k<2; k++){
@@ -105,14 +105,12 @@ void countLoop::Loop()
 	  }}}
       
       
-      std::cout<<" before hit loop"<<std::endl;
       for(int i=0; i < hitSubDec->size(); i++){
 	
 	if(onlyMuons && hitPID->at(i)!= -13) continue;
 	
 	hZ_vs_R->Fill((*hitGlobalZ)[i], Rho((*hitGlobalX)[i], (*hitGlobalY)[i]));
 
-	std::cout<<" after z vs r "<<std::endl;
 	if((*hitSubDec)[i]==1) hX_vs_Y->Fill((*hitGlobalX)[i], (*hitGlobalY)[i]);
 	
 	int index = std::find(pdgid_.begin(), pdgid_.end(),  abs(hitPID->at(i))) - pdgid_.begin();
@@ -121,7 +119,7 @@ void countLoop::Loop()
 	  int subdet = (*hitSubDec)[i] -1;
 	  int layer  = (*hitLayer)[i] -1;
 	  int disk   = (*hitDisk)[i] -1;
-	  std::cout<<" subdet = "<<subdet
+	  if(debug) std::cout<<" subdet = "<<subdet
 		   <<" layer = "<<layer
 		   <<" disk = "<<disk
 		   <<std::endl;
@@ -134,7 +132,7 @@ void countLoop::Loop()
 	int hitLayerIndex = hitLayer->at(i)-1;
 	int hitDiskIndex = hitDisk->at(i)-1;
 	
-	if(false)
+	if(debug)
 	  std::cout<<" Eta = "<<(*hitGlobalEta)[i]
 		   <<" Phi = "<<(*hitGlobalPhi)[i]
 		   <<" X = "<<(*hitGlobalX)[i]
@@ -151,16 +149,9 @@ void countLoop::Loop()
 	
 	if(hitSubDec->at(i)==1) // for barrel 
 	  {
-	    //if(Rentry < Rexit && countB[hitLayerIndex]>0)    std::cout<<" already one hit for this layer "<<hitLayerIndex<<"   "<<countB[hitLayerIndex]<<std::endl;
-	    //if(Rentry < Rexit && countB[hitLayerIndex]==0)   countB[hitLayerIndex]++;
-	    //if(Rentry > Rexit)   countB[hitLayerIndex]++;
-	    //if(countB[hitLayerIndex]==1)
-	    //  tofB[hitLayerIndex]= hitTof->at(i);
-	    //else if(countB[hitLayerIndex]>1)
-	    //  ht[0][hitLayerIndex]->Fill(hitTof->at(i)-tofB[hitLayerIndex]);
-
 	    countB[hitLayerIndex]++;
-	    double tof_ = hitTof->at(i) - ( (*hitGlobalR)[i] / vel_of_light ) ;
+	    double R = Rho( (*hitGlobalR)[i], (*hitGlobalZ)[i]);
+	    double tof_ = hitTof->at(i) - ( R / vel_of_light ) ;
 	    //ht[0][hitLayerIndex]->Fill(hitTof->at(i));
 	    ht[0][hitLayerIndex]->Fill(tof_);
 	    
@@ -168,18 +159,11 @@ void countLoop::Loop()
 	else
 	  if(hitSubDec->at(i)==2) // for endcap
 	    {
-	      //if(Rentry < Rexit && countE[hitDiskIndex]==0)   countE[hitDiskIndex]++;
-	      //if(Rentry < Rexit && countE[hitDiskIndex]>0)    std::cout<<" already one hit for this dosc endcap"<<std::endl;
-	      //if(Rentry > Rexit)   countE[hitDiskIndex]++;
-	      //
-	      //if(countE[hitDiskIndex]==1)
-	      //tofE[hitDiskIndex]= hitTof->at(i);
-	      //else if(countE[hitDiskIndex]>1)
-	      //ht[1][hitDiskIndex]->Fill(hitTof->at(i)-tofE[hitDiskIndex]);
 	      countE[hitDiskIndex]++;
-	      ht[1][hitDiskIndex]->Fill(hitTof->at(i));
+	      double R = Rho( (*hitGlobalR)[i], (*hitGlobalZ)[i]);
+	      double tof_ = hitTof->at(i) - ( R / vel_of_light ) ;
+	      ht[1][hitDiskIndex]->Fill(tof_);
 	    }
-	std::cout<<" hit loop ends here "<<std::endl;
       }
    
       
