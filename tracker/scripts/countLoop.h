@@ -26,6 +26,9 @@ public :
    
    Float_t Rentry;
    Float_t Rexit;
+   
+   std::vector<int> pdgid_;
+      
    // Declaration of leaf types
    Float_t         ptHat;
    Float_t         mcWeight;

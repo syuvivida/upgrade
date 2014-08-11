@@ -6,19 +6,55 @@
 #include <TCanvas.h>
 #include <string>
 #include <iostream>
-// trying git merging 
+#include "TProfile.h"
+#define vel_of_light 0.3  // speed of light in m/ns
+
 using namespace std;
 void countLoop::Loop()
 {
+  bool debug = true;
+  bool onlyMuons = false; // true : save information of muons only 
+                          // false : save information of all the particles in the tree
+  
+  int nhits_[2][15][7];
+  
+  // clear vectors
+  pdgid_.clear();
+  
+  
+  pdgid_.push_back(11);    // electron
+  pdgid_.push_back(13);    // muon
+  pdgid_.push_back(22);    // photon
+  pdgid_.push_back(211);   // pion
+  pdgid_.push_back(321);   // kaon
+  pdgid_.push_back(2112);  // neutron
+  pdgid_.push_back(2212);  // proton
+  
+  
   std::string title[2]={"Barrel","Endcap"};
   std::string subtitle[2]={"Layer","Disk"};
-  TH1F* hcount_1d = new TH1F("hcount_1d","",5, 0.5,5.5);
-  TH1F* htof = new TH1F("htof","",100000,0.01,100);
+  TH1F* hcount_1d = new TH1F("hcount_1d","",100, 0.5,100.5);
+  TH1F* htof      = new TH1F("htof","",1000,0.1,100);
+  TProfile* hdistance = new TProfile("hdistance","hdistance",15, 0.5, 15.5,0,500);
+  TH1F* hrho      = new TH1F("hrho","hrho",300, 0.5, 300.5);
+  
+  TH2F* hZ_vs_R   = new TH2F("hZ_vs_R","hZ_vs_R", 600, -300, 300, 120, 0, 120);
+  TH2F* hX_vs_Y   = new TH2F("hX_vs_Y","hX_vs_Y",1000, -500, 500, 1000, -500, 500);
+
   TH1F* h[2][15];
   TH1F* ht[2][15];
+  const int pdgidSize = pdgid_.size();
+  TProfile* hDistance[2][pdgidSize];
+  for(int k=0;k<2; k++){
+    for(int i=0;i<(int)pdgid_.size();i++){
+      hDistance[k][i] = (TProfile*)hdistance->Clone(Form("hDistance_%s_%d",title[k].data(), pdgid_[i]));
+      hDistance[k][i]->SetXTitle("distance (in mm)");
+      hDistance[k][i]->SetTitle(Form("distance for particle ",pdgid_[i]));
+    }
+  }
   for(int k=0;k<2; k++){
     for(int i=0;i<15;i++){
-      
+
       h[k][i]=(TH1F*)hcount_1d->Clone(Form("h%d%02i",k,i));
       h[k][i]->SetXTitle("Number of crossings per particle");
       h[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
@@ -32,7 +68,7 @@ void countLoop::Loop()
     }
   }
 
-  TH2F* hcount = new TH2F("hcount","",15,0.5,15.5,5, 0.5,5.5);
+  TH2F* hcount = new TH2F("hcount","",15,0.5,15.5,100, 0.5,100.5);
   TH2F* hbarrel = (TH2F*)hcount->Clone("hbarrel");
   hbarrel->SetTitle("Barrel");
   hbarrel->SetXTitle("Layer");
@@ -46,43 +82,72 @@ void countLoop::Loop()
   int countE[15]={0};
   float tofB[10]={0.};
   float tofE[15]={0.};
+  
 
+  
   if (fChain == 0) return;
   
   Long64_t nentries = fChain->GetEntriesFast();
   //nentries = 20;
   Long64_t nbytes = 0, nb = 0;
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
-      Long64_t ientry = LoadTree(jentry);
+     Long64_t ientry = LoadTree(jentry);
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       // if (Cut(ientry) < 0) continue;
       std::cout<<" event "<<jentry<<std::endl;
       for(int i=0;i<10;i++)countB[i]=0;
       for(int i=0;i<15;i++)countE[i]=0;
+      for(int i=0;i<2;i++){
+	for(int j=0;j<15;j++){
+	  for(int k=0;k<7;k++){
+	    nhits_[i][j][k]=0;
+	  }}}
       
       
+      std::cout<<" before hit loop"<<std::endl;
       for(int i=0; i < hitSubDec->size(); i++){
 	
-	if(hitPID->at(i)!= -13)continue;
+	if(onlyMuons && hitPID->at(i)!= -13) continue;
+	
+	hZ_vs_R->Fill((*hitGlobalZ)[i], Rho((*hitGlobalX)[i], (*hitGlobalY)[i]));
+
+	std::cout<<" after z vs r "<<std::endl;
+	if((*hitSubDec)[i]==1) hX_vs_Y->Fill((*hitGlobalX)[i], (*hitGlobalY)[i]);
+	
+	int index = std::find(pdgid_.begin(), pdgid_.end(),  abs(hitPID->at(i))) - pdgid_.begin();
+	if(debug) std::cout<<" pdgid = "<<hitPID->at(i)<<"  index = "<<index<<std::endl;
+	if(index != pdgid_.size() ){
+	  int subdet = (*hitSubDec)[i] -1;
+	  int layer  = (*hitLayer)[i] -1;
+	  int disk   = (*hitDisk)[i] -1;
+	  std::cout<<" subdet = "<<subdet
+		   <<" layer = "<<layer
+		   <<" disk = "<<disk
+		   <<std::endl;
+	  if(subdet==0)  nhits_[0][layer][index]++;
+	  if(subdet==1)  nhits_[1][disk][index]++;
+	}
+	
 	Rentry = Rho((*hitEntryPointX)[i], (*hitEntryPointY)[i]);
 	Rexit = Rho((*hitExitPointX)[i], (*hitExitPointY)[i]);
 	int hitLayerIndex = hitLayer->at(i)-1;
 	int hitDiskIndex = hitDisk->at(i)-1;
-
-	std::cout<<" Eta = "<<(*hitGlobalEta)[i]
-		 <<" Phi = "<<(*hitGlobalPhi)[i]
-		 <<" X = "<<(*hitGlobalX)[i]
-		 <<" Y = "<<(*hitGlobalY)[i]
-		 <<" Z = "<<(*hitGlobalZ)[i]
-		 <<" rho = "<<Rho((*hitGlobalX)[i],(*hitGlobalY)[i])
-		 <<" X = "<<(*hitGlobalDirectionX)[i]
-		 <<" Y = "<<(*hitGlobalDirectionY)[i]
-		 <<" Z = "<<(*hitGlobalDirectionZ)[i]
-		 <<" hitLayerIndex = "<<hitLayerIndex
-		 <<" hitDiskIndex = "<<hitDiskIndex
-		 <<" tof = "<<hitTof->at(i)
-		 <<std::endl;
+	
+	if(false)
+	  std::cout<<" Eta = "<<(*hitGlobalEta)[i]
+		   <<" Phi = "<<(*hitGlobalPhi)[i]
+		   <<" X = "<<(*hitGlobalX)[i]
+		   <<" Y = "<<(*hitGlobalY)[i]
+		   <<" Z = "<<(*hitGlobalZ)[i]
+		   <<" rho = "<<Rho((*hitGlobalX)[i],(*hitGlobalY)[i])
+		   <<" X = "<<(*hitGlobalDirectionX)[i]
+		   <<" Y = "<<(*hitGlobalDirectionY)[i]
+		   <<" Z = "<<(*hitGlobalDirectionZ)[i]
+		   <<" hitLayerIndex = "<<hitLayerIndex
+		   <<" hitDiskIndex = "<<hitDiskIndex
+		   <<" tof = "<<hitTof->at(i)
+		   <<std::endl;
 	
 	if(hitSubDec->at(i)==1) // for barrel 
 	  {
@@ -95,7 +160,10 @@ void countLoop::Loop()
 	    //  ht[0][hitLayerIndex]->Fill(hitTof->at(i)-tofB[hitLayerIndex]);
 
 	    countB[hitLayerIndex]++;
-	    ht[0][hitLayerIndex]->Fill(hitTof->at(i));
+	    double tof_ = hitTof->at(i) - ( (*hitGlobalR)[i] / vel_of_light ) ;
+	    //ht[0][hitLayerIndex]->Fill(hitTof->at(i));
+	    ht[0][hitLayerIndex]->Fill(tof_);
+	    
 	  }
 	else
 	  if(hitSubDec->at(i)==2) // for endcap
@@ -111,6 +179,7 @@ void countLoop::Loop()
 	      countE[hitDiskIndex]++;
 	      ht[1][hitDiskIndex]->Fill(hitTof->at(i));
 	    }
+	std::cout<<" hit loop ends here "<<std::endl;
       }
    
       
@@ -125,10 +194,16 @@ void countLoop::Loop()
 	h[1][i]->Fill(countE[i]);
 	std::cout<<" countE = "<<countE[i]<<std::endl;
       }
-    
+   
             
+      for(int i=0;i<2;i++){
+	for(int j=0;j<15;j++){
+	  for(int k=0;k<7;k++){
+	    hDistance[i][k]->Fill(j,nhits_[i][j][k]);
+	  }}}
+   
    }
-
+   
    hbarrel->Draw();
    hendcap->Draw();
    TFile* outFile = new TFile(outputfile_,"recreate");       
@@ -142,8 +217,14 @@ void countLoop::Loop()
 	 ht[i][j]->Write();
        }
    }
-
-  outFile->Close();
+   for(int k=0;k<2;k++){
+     for(int i=0;i<(int)pdgid_.size();i++){
+       hDistance[k][i]->Write();
+     }
+   }
+   hZ_vs_R->Write();
+   hX_vs_Y->Write();
+   outFile->Close();
 
 
 }
