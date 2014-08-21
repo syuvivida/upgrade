@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <string>
 #include <fstream>
 #include <TH2.h>
 #include <TRandom.h>
@@ -15,6 +16,14 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
   std::string subtitle[2]={"Layer","Disk"};
 
   const int nBunches = 20;
+  const int nLayers[2] = {10,15};
+  TH1F* hoot[2];
+  for(int k=0; k<2; k++)
+    {
+      hoot[k] = new TH1F(Form("hoot_%s",title[k].data()),"Fraction of digitized OOT hits",nLayers[k],0.5,(float)(nLayers[k]+0.5));
+      
+    }
+  TH1F* hendcap  = new TH1F("hendcap","",10,0.5,10.5);
   TH1F* htof     = new TH1F("htof","", 500,0, 500);
   TH1F* hetof    = new TH1F("hetof","", 100,0, 20);
   TH1F* hread    = new TH1F("hread","",nBunches,0,(float)(nBunches));
@@ -34,12 +43,12 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
       hdiff[k][i]=(TH1F*)htof->Clone(Form("hdiff%d%02i",k,i));
       hdiff[k][i]->SetXTitle("Difference of TOF from expectation: ns");
       hdiff[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
-			      subtitle[k].data(),i+1));
+				 subtitle[k].data(),i+1));
 
       het[k][i]=(TH1F*)hetof->Clone(Form("het%d%02i",k,i));
       het[k][i]->SetXTitle("Expected time of flight: ns");
       het[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
-			      subtitle[k].data(),i+1));
+			       subtitle[k].data(),i+1));
 
       hr[k][i]=(TH1F*)hread->Clone(Form("hr%d%02i",k,i));
       hr[k][i]->SetXTitle("Number of bunch crossings");
@@ -49,8 +58,8 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
     }
   }
 
-  // get TTree from file ...
   TreeReader data(fin.data()); // v5.3.12
+    
 
   for (Long64_t ev = 0; ev < data.GetEntriesFast(); ev++) {
     // print progress
@@ -61,7 +70,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
     Int_t  nHits = data.GetInt("nSimHits");
     Int_t* decID = data.GetPtrInt("hitSubDec");
     Int_t* PID   = data.GetPtrInt("hitPID");
-    Int_t* proc  = data.GetPtrInt("hitProcessType");
+//     Int_t* proc  = data.GetPtrInt("hitProcessType");
     Int_t* layer = data.GetPtrInt("hitLayer");
     Int_t* disk  = data.GetPtrInt("hitDisk");
 
@@ -74,6 +83,10 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 
  
     for(int i=0; i < nHits; i++){
+
+      if(PID[i]== 22 || PID[i]== 12 || PID[i]== 14 || PID[i]== 16 
+	 || PID[i]== 130 || PID[i]== 310 || PID[i]== 311 || PID[i] == 2112 ||
+	 PID[i]== 3122)continue;
 
       int hitLayerIndex = layer[i]-1;
       int hitDiskIndex  = disk[i]-1;
@@ -97,7 +110,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 
       for(int k=0; k < nBunches; k++)
 	{
-	  if(tdiff< 25*k+ readoutWindow){
+	  if(tdiff< (Float_t)(25*k+ readoutWindow) && tdiff  >= (Float_t)(25*k)){
 	    hr[decIndex][subLayerIndex]->Fill(k);
 	    break;
 	  }
@@ -111,16 +124,26 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
   } // event loop
 
   TFile* outFile = new TFile("histo_oot.root","recreate");       
-   
+
   for(int i=0;i<2;i++){
-    for(int j=0; j<15;j++)
+    for(int j=0; j<nLayers[i] ;j++)
       {
 	ht[i][j]->Write();
 	hdiff[i][j]->Write();
 	het[i][j]->Write();
 	hr[i][j]->Write();
-      }
+
+	if(hr[i][j]->GetEntries() > 0 ){
+	  float fraction = (float)(hr[i][j]->GetEntries()-hr[i][j]->GetBinContent(1))/(float)(hr[i][j]->GetEntries());
+	  float fraction_err =  fraction*(1-fraction)/(float)(hr[i][j]->GetEntries());
+	  hoot[i]->SetBinContent(j+1,fraction);
+	  hoot[i]->SetBinError(j+1,fraction_err);
+	}
+
+      }// end of loop over layers
+    hoot[i]->Write();
   }
 
+  
   outFile->Close();
 }
