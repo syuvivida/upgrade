@@ -12,6 +12,36 @@ using namespace std;
 
 void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default = +-3ns
 
+  std::vector<string> infiles;
+
+  bool readOneFile=true;
+  if(fin.find(".txt")!= std::string::npos)
+    readOneFile=false;
+  
+  if(readOneFile)
+    {
+      infiles.push_back(fin);
+    }
+  
+  else{
+    FILE *fTable = fopen(fin.data(),"r");
+    int flag=1;
+    int nfile=0;
+
+    while (flag!=-1){
+      char filename[300];
+      flag=fscanf(fTable,"%s",filename);
+      // first reading input file
+      if(flag!=-1){
+	std::string tempFile = filename;    
+	infiles.push_back(tempFile);
+	nfile++;
+      }
+    }
+
+    cout << "nfiles = " << nfile << endl;
+  }
+
   std::string title[2]={"Barrel","Endcap"};
   std::string subtitle[2]={"Layer","Disk"};
 
@@ -58,7 +88,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
     }
   }
 
-  TreeReader data(fin.data()); // v5.3.12
+  TreeReader data(infiles); // v5.3.12
     
 
   for (Long64_t ev = 0; ev < data.GetEntriesFast(); ev++) {
