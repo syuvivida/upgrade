@@ -163,9 +163,9 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 	het[i][j]->Write();
 	hr[i][j]->Write();
 
-	if(hr[i][j]->GetEntries() > 0 ){
-	  float fraction = (float)(hr[i][j]->GetEntries()-hr[i][j]->GetBinContent(1))/(float)(hr[i][j]->GetEntries());
-	  float fraction_err =  fraction*(1-fraction)/(float)(hr[i][j]->GetEntries());
+	if(hr[i][j]->Integral() > 0 ){
+	  float fraction = (float)(hr[i][j]->Integral()-hr[i][j]->GetBinContent(1))/(float)(hr[i][j]->Integral());
+	  float fraction_err =  fraction*(1-fraction)/(float)(hr[i][j]->Integral());
 	  hoot[i]->SetBinContent(j+1,fraction);
 	  hoot[i]->SetBinError(j+1,fraction_err);
 	}
