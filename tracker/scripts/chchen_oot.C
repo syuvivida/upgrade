@@ -150,7 +150,6 @@ void chchen_oot(std::string fin, float readoutWindow=3){ // readoutWindow defaul
     Float_t* hGlobalZ =data.GetPtrFloat("hitGlobalZ"); 
     Float_t* hTof =data.GetPtrFloat("hitTof");
 
-
     int gsize=gensize;
     for(int j=0;j<gsize;j++){
     if(gPID[j]!= +13)continue;
@@ -159,7 +158,6 @@ void chchen_oot(std::string fin, float readoutWindow=3){ // readoutWindow defaul
       if(PID[i]== 22 || PID[i]== 12 || PID[i]== 14 || PID[i]== 16 
 	 || PID[i]== 130 || PID[i]== 310 || PID[i]== 311 || PID[i] == 2112 ||
 	 PID[i]== 3122)continue;
-
    
       int hitLayerIndex = layer[i]-1;
       int hitDiskIndex  = disk[i]-1;
@@ -177,77 +175,77 @@ void chchen_oot(std::string fin, float readoutWindow=3){ // readoutWindow defaul
       //cout<<"calVt="<<calVt<<endl;       
       Float_t gloXY = sqrt(hGlobalX[i]*hGlobalX[i]+hGlobalY[i]*hGlobalY[i]) ;
       Float_t BR = calPt*0.877; //=pt/qB
-      Float_t angle =gloXY/BR/200;              
-      Float_t arcsin =asin(angle);       
+      Float_t sineAngle =gloXY/BR/200; 
+      if(sineAngle>1)sineAngle=0;             
+      Float_t arcsin =asin(sineAngle);       
       Float_t calR =arcsin*BR*2;       
       Float_t timeT = (calR*1000000000)/calVt/299792458;
+      if(timeT==0)timeT=gloXY/30;
       Float_t timeZ =(abs(hGlobalZ[i])*10000000)/calVz/299792458;
       if (timeZ>timeT)timeT=timeZ;
+      Float_t tdiff=0;
      
-       
-      //cout<<"gloXY="<<gloXY<<endl;  
-      //cout<<"angle="<<angle<<endl;
-      //cout<<"arcsin="<<arcsin<<endl;
-      //cout<<"calR="<<calR<<endl;
-      //cout<<"timeT="<<timeT<<endl;
-      //cin>>calE;
-
+      /*if (hitLayerIndex==4){
+      cout<<"gloXY="<<gloXY<<endl;  
+      cout<<"BR="<<BR<<endl;
+      cout<<"angle="<<angle<<endl;
+      cout<<"arcsin="<<arcsin<<endl;
+      cout<<"calR="<<calR<<endl;
+      cout<<"timeT="<<timeT<<endl;
+      cin>>calE;
+      }*/
 
      if(decID[i]==1)
 	  { 
-           
-	    countB[hitLayerIndex]++;
+            countB[hitLayerIndex]++;
 	    if(countB[hitLayerIndex]==1){
 	      tofB[hitLayerIndex]= hTof[i];
-              f[0][hitLayerIndex]->Fill(tofB[hitLayerIndex]);
-              //z[0][hitLayerIndex]->Fill(calPz);
+              f[0][hitLayerIndex]->Fill(tofB[hitLayerIndex]);            
               fc[0][hitLayerIndex]->Fill(timeT);
-              Float_t tdiff=tofB[hitLayerIndex]-timeT;
+              //if (hitLayerIndex==4)cout<<"timeT="<<timeT<<endl;
+              tdiff=tofB[hitLayerIndex]-timeT;
               d[0][hitLayerIndex]->Fill(tdiff);
-              tdiff=abs(tdiff);
-              for(int k=0; k < nBunches; k++){
+              tdiff=abs(tdiff);             
+            }
+	    else if(countB[hitLayerIndex]>1){
+	      ht[0][hitLayerIndex]->Fill(hTof[i]-tofB[hitLayerIndex]);
+              tdiff=abs(hTof[i]-timeT);}
+            for(int k=0; k < nBunches; k++){
 	        if(tdiff< (Float_t)(25*k+ readoutWindow) && tdiff  >= (Float_t)(25*k)){
 	        hr[0][hitLayerIndex]->Fill(k);
 	        break;
 	        }
-              }   
-            }
-	    else if(countB[hitLayerIndex]>1)
-	      ht[0][hitLayerIndex]->Fill(hTof[i]-tofB[hitLayerIndex]);
+             }  
 	  }
 	else
 	  if(decID[i]==2)
-	    {
-             
-
+	    {             
 	      countE[hitDiskIndex]++;
-	      if(countE[hitDiskIndex]==1){ 
-               
+	      if(countE[hitDiskIndex]==1){                
 		tofE[hitDiskIndex]= hTof[i];
                 f[1][hitDiskIndex]->Fill(tofE[hitDiskIndex]);
-                //z[1][hitDiskIndex]->Fill(calPz);
                 fc[1][hitDiskIndex]->Fill(timeT);
-                Float_t tdiff=tofE[hitDiskIndex]-timeT;
+                tdiff=tofE[hitDiskIndex]-timeT;
                 d[1][hitDiskIndex]->Fill(tdiff);
-                tdiff=abs(tdiff);
-                for(int k=0; k < nBunches; k++){
+                tdiff=abs(tdiff);                              
+              }
+	      else if(countE[hitDiskIndex]>1){
+		ht[1][hitDiskIndex]->Fill(hTof[i]-tofE[hitDiskIndex]);
+                tdiff=abs(hTof[i]-timeT);
+              }
+              for(int k=0; k < nBunches; k++){
 	          if(tdiff< (Float_t)(25*k+ readoutWindow) && tdiff  >= (Float_t)(25*k)){
 	          hr[1][hitDiskIndex]->Fill(k);
 	          break;
 	          }
-                }
               }
-	      else if(countE[hitDiskIndex]>1)
-		ht[1][hitDiskIndex]->Fill(hTof[i]-tofE[hitDiskIndex]);
 	    }
 
-     
 
-      
+    
       } // loop over number of hits in each event
     
     } //end of nGarPar
-
 
      for(int i=0;i<10;i++){
 	hbarrel->Fill(i+1,countB[i]);
@@ -258,15 +256,9 @@ void chchen_oot(std::string fin, float readoutWindow=3){ // readoutWindow defaul
 	h[1][i]->Fill(countE[i]);
       }
 
-
   } // event loop
-    
-     
-
-
-
-
-  TFile* outFile = new TFile("histo_oot.root","recreate");       
+         
+  TFile* outFile = new TFile("histoCh_oot.root","recreate");       
   hbarrel->Write();
   hendcap->Write();
   for(int i=0;i<2;i++){
