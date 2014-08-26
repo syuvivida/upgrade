@@ -53,34 +53,33 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
       hoot[k] = new TH1F(Form("hoot_%s",title[k].data()),"Fraction of digitized OOT hits",nLayers[k],0.5,(float)(nLayers[k]+0.5));
       
     }
-  TH1F* hendcap  = new TH1F("hendcap","",10,0.5,10.5);
-  TH1F* htof     = new TH1F("htof","", 500,0, 500);
-  TH1F* hetof    = new TH1F("hetof","", 100,0, 20);
-  TH1F* hread    = new TH1F("hread","",nBunches,0,(float)(nBunches));
-  TH1F* ht[2][15];
-  TH1F* hdiff[2][15];
-  TH1F* het[2][15];
-  TH1F* hr[2][15];
+  TH1I* htof     = new TH1I("htof","", 500,0, 500);
+  TH1I* hetof    = new TH1I("hetof","", 100,0, 20);
+  TH1I* hread    = new TH1I("hread","",nBunches,0,(float)(nBunches));
+  TH1I* ht[2][15];
+  TH1I* hdiff[2][15];
+  TH1I* het[2][15];
+  TH1I* hr[2][15];
   for(int k=0;k<2; k++){
     for(int i=0;i<15;i++){
 
      
-      ht[k][i]=(TH1F*)htof->Clone(Form("ht%d%02i",k,i));
+      ht[k][i]=(TH1I*)htof->Clone(Form("ht%d%02i",k,i));
       ht[k][i]->SetXTitle("Simulated time of flight: ns");
       ht[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 			      subtitle[k].data(),i+1));
 
-      hdiff[k][i]=(TH1F*)htof->Clone(Form("hdiff%d%02i",k,i));
+      hdiff[k][i]=(TH1I*)htof->Clone(Form("hdiff%d%02i",k,i));
       hdiff[k][i]->SetXTitle("Difference of TOF from expectation: ns");
       hdiff[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 				 subtitle[k].data(),i+1));
 
-      het[k][i]=(TH1F*)hetof->Clone(Form("het%d%02i",k,i));
+      het[k][i]=(TH1I*)hetof->Clone(Form("het%d%02i",k,i));
       het[k][i]->SetXTitle("Expected time of flight: ns");
       het[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 			       subtitle[k].data(),i+1));
 
-      hr[k][i]=(TH1F*)hread->Clone(Form("hr%d%02i",k,i));
+      hr[k][i]=(TH1I*)hread->Clone(Form("hr%d%02i",k,i));
       hr[k][i]->SetXTitle("Number of bunch crossings");
       hr[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 			      subtitle[k].data(),i+1));
@@ -89,7 +88,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
   }
 
   TreeReader data(infiles); // v5.3.12
-    
+  Long64_t nCount=0;
 
   for (Long64_t ev = 0; ev < data.GetEntriesFast(); ev++) {
     // print progress
@@ -141,6 +140,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
       for(int k=0; k < nBunches; k++)
 	{
 	  if(tdiff< (Float_t)(25*k+ readoutWindow) && tdiff  >= (Float_t)(25*k)){
+	    if(decIndex==0 && subLayerIndex==0)nCount++;
 	    hr[decIndex][subLayerIndex]->Fill(k);
 	    break;
 	  }
@@ -153,6 +153,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
       
   } // event loop
 
+  std::cout << "nCount = " << nCount << std::endl;
   TFile* outFile = new TFile("histo_oot.root","recreate");       
 
   for(int i=0;i<2;i++){
@@ -163,9 +164,10 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 	het[i][j]->Write();
 	hr[i][j]->Write();
 
-	if(hr[i][j]->Integral() > 0 ){
-	  float fraction = (float)(hr[i][j]->Integral()-hr[i][j]->GetBinContent(1))/(float)(hr[i][j]->Integral());
-	  float fraction_err =  fraction*(1-fraction)/(float)(hr[i][j]->Integral());
+	float ntotal = hr[i][j]->Integral();
+	if(ntotal > 0 ){
+	  float fraction = (float)(ntotal-hr[i][j]->GetBinContent(1))/ntotal;
+	  float fraction_err =  fraction*(1-fraction)/ntotal;
 	  hoot[i]->SetBinContent(j+1,fraction);
 	  hoot[i]->SetBinError(j+1,fraction_err);
 	}
