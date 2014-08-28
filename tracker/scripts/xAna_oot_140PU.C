@@ -77,7 +77,7 @@ void fillHisto(TreeReader& data, float readoutWindow)
 
     for(int k=0; k < nBunches; k++)
       {
-	if(fabs(tdiff-25*k)< readoutWindow){
+	if(fabs(tdiff-(Float_t)25*k)< readoutWindow){
 	  hr[decIndex][subLayerIndex]->Fill(k);
 	  break;
 	}
