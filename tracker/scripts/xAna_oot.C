@@ -158,7 +158,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 
       for(int k=0; k < nBunches; k++)
 	{
-	  if(fabs(tdiff-25*k)< readoutWindow){
+	  if(fabs(tdiff-(Float_t)25*k)< readoutWindow){
 	    if(decIndex==0 && subLayerIndex==0)nCount++;
 	    hr[decIndex][subLayerIndex]->Fill(k);
 	    break;
