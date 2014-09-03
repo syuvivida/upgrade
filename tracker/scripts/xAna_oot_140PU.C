@@ -229,7 +229,7 @@ void xAna_oot_140PU(std::string fin, std::string mbfin="minbias.txt", float read
     if (ev % 50000 == 0)
       fprintf(stderr, "Processing PU event %lli of %lli\n", ev + 1, nMBInput);
      pu.GetEntry(ev);
-     fillHisto(qcd,readoutWindow);
+     fillHisto(pu,readoutWindow);
   } // event loop for pileup Events
   
   
