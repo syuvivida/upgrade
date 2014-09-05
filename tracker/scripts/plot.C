@@ -1,46 +1,67 @@
 #include <TH2.h>
 #include <string>
+#include <iostream>
+#include <TFile.h>
+#include <TCanvas.h>
+#include <TStyle.h>
 
 using namespace std;
 
-void plot(){
+void plot(std::string fin){
 
-  TFile *inf = new TFile("histo-13.root");
+  TFile *inf = new TFile(fin.data());
+  std::string remword = ".root";
+  size_t pos  = fin.find(remword);
+  std::string filename = fin;
+  if(pos!= std::string::npos)
+    filename.swap(filename.erase(pos,remword.length()));
+  filename += ".pdf";
+  cout << filename << endl;
+
   
-  TCanvas* c1 = new TCanvas("c1","",500,500);
-  std::string name="anti-muon";
-  gSystem->Exec(Form("mkdir %s",name.data()));
+  TCanvas* c1 = new TCanvas("c1","",700,500);
+  gStyle->SetOptStat(0);
 
-  TH2F* h1 = (TH2F*)inf->FindObjectAny("hbarrel");
-  h1->Draw("box");
-  c1->Print(Form("%s/hbarrelMap.gif",name.data()));
+  c1->cd();
 
-  h1 = (TH2F*)inf->FindObjectAny("hendcap");
-  h1->Draw("box");
-  c1->Print(Form("%s/hendcapMap.gif",name.data()));
-  for(int i=0;i<2;i++){
-    int end=(i==0)?4:10;
-    for(int k=0; k<end; k++)
-      {
-	c1->SetLogy(1);
-	TH1F *h = (TH1F*)inf->FindObjectAny(Form("h%d%02i",i,k));
-	h->Draw();
-	cout << h->GetName() << endl;
-	c1->Print(Form("%s/%s.gif",name.data(),h->GetName()));
-      }
-  }
+  TH1F* h1 = (TH1F*)inf->FindObjectAny("hoot_Barrel");
+  h1->SetMinimum(0);
+  h1->SetXTitle("Layer");
+  h1->Draw();
+  c1->Print(Form("%s(",filename.data()));
 
-  for(int i=0;i<2;i++){
-    int end=(i==0)?4:10;
-    for(int k=0; k<end; k++)
-      {
-	c1->SetLogy(1);
-	TH1F *h = (TH1F*)inf->FindObjectAny(Form("ht%d%02i",i,k));
-	h->Draw();
-	cout << h->GetName() << endl;
-	c1->Print(Form("%s/%s.gif",name.data(),h->GetName()));
-      }
-  }
+  TH1F* h3 = (TH1F*)inf->FindObjectAny("hoot_digi_Barrel");
+  h3->SetMinimum(0);
+  h3->SetXTitle("Layer");
+  h3->Draw();
+  c1->Print(filename.data());
+
+  TH1F* h4 = (TH1F*)inf->FindObjectAny("hoot_digi_oot_Barrel");
+  h4->SetMinimum(0);
+  h4->SetXTitle("Layer");
+  h4->Draw();
+  c1->Print(filename.data());
+
+
+  TH1F* h5 = (TH1F*)inf->FindObjectAny("hoot_Endcap");
+  h5->SetMinimum(0);
+  h5->SetXTitle("Disk");
+  h5->Draw();
+  c1->Print(filename.data());
+
+  TH1F* h7 = (TH1F*)inf->FindObjectAny("hoot_digi_Endcap");
+  h7->SetMinimum(0);
+  h7->SetXTitle("Disk");
+  h7->Draw();
+  c1->Print(filename.data());
+
+  TH1F* h8 = (TH1F*)inf->FindObjectAny("hoot_digi_oot_Endcap");
+  h8->SetMinimum(0);
+  h8->SetXTitle("Disk");
+  h8->Draw();
+  c1->Print(Form("%s)",filename.data()));
   
+  
+
 
 }

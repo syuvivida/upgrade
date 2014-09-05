@@ -12,6 +12,7 @@ using namespace std;
 
 void errmc(float nsig,float ntotal, float& eff, float& err)
 {
+  cout << "nsig = " << nsig << " ntotal = " << ntotal << endl;
   if(ntotal<1e-6){eff=-1; err=-1; return;}
   eff = nsig/ntotal;
   err = sqrt( (1-eff)*eff/ntotal);
@@ -56,19 +57,14 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
   const int nBunches = 20;
   const int nLayers[2] = {10,15};
   TH1F* hoot[2];
-  TH1F* hdigi[2];
   TH1F* hoot_digi[2];
   TH1F* hoot_digi_oot[2];
 
   for(int k=0; k<2; k++)
     {
-      hoot[k] = new TH1F(Form("hoot_%s",title[k].data()),Form("Fraction of OOT Hits Relative to All Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
-      hdigi[k] = new TH1F(Form("hdigi_%s",title[k].data()),Form("Fraction of Digitized Hits Relative to All Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
-
+      hoot[k] = new TH1F(Form("hoot_%s",title[k].data()),Form("Fraction of Hits Not Digitized In-Time Relative to All Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
       hoot_digi[k] = new TH1F(Form("hoot_digi_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All Digitized Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
-
-
-      hoot_digi_oot[k] = new TH1F(Form("hoot_digi_oot_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All OOT Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
+      hoot_digi_oot[k] = new TH1F(Form("hoot_digi_oot_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All Hits Not Digitized In-Time in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
       
     }
 
@@ -79,6 +75,8 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
   TH1I* hdiff[2][15];
   TH1I* het[2][15];
   TH1I* hr[2][15];
+  TH1I* hdiff_digi[2][15][nBunches];
+
   for(int k=0;k<2; k++){
     for(int i=0;i<15;i++){
 
@@ -102,6 +100,14 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
       hr[k][i]->SetXTitle("Number of bunch crossings");
       hr[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 			      subtitle[k].data(),i+1));
+
+     for(int b=0; b< nBunches; b++){
+
+	hdiff_digi[k][i][b]=(TH1I*)htof->Clone(Form("hdiff_digi_%d%02i_%02i",k,i,b));
+	hdiff_digi[k][i][b]->SetXTitle("Difference of TOF from expectation: ns");
+	hdiff_digi[k][i][b]->SetTitle(Form("%s, %s %d in bunch %d",title[k].data(),
+					   subtitle[k].data(),i+1,b));
+      }
       
     }
   }
@@ -161,6 +167,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 	  if(fabs(tdiff-(Float_t)25*k)< readoutWindow){
 	    if(decIndex==0 && subLayerIndex==0)nCount++;
 	    hr[decIndex][subLayerIndex]->Fill(k);
+	    hdiff_digi[decIndex][subLayerIndex][k]->Fill(tdiff);
 	    break;
 	  }
 	}
@@ -182,16 +189,19 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 	hdiff[i][j]->Write();
 	het[i][j]->Write();
 	hr[i][j]->Write();
+
+	for(int b=0; b< nBunches; b++)
+	  hdiff_digi[i][j][b]->Write();
+
 	// compute the fraction of OOT Hits in various ways
 
-	int nBinIndex = 25.0/ht[i][j]->GetBinWidth(1);
-	int nBins = ht[i][j]->GetNbinsX();
-	// number of hits outside of 25 ns windows
-	Long64_t nOOT = ht[i][j]->Integral(nBinIndex+1,nBins+1); 
+	// number of hits not digitized in the first bounch crossing
+	Long64_t nOOT = hdiff[i][j]->GetEntries()-hr[i][j]->GetBinContent(1);
+
 	float fraction=-1;
 	float fraction_err=-1;
 	errmc(nOOT,
-	      ht[i][j]->GetEntries(),
+	      hdiff[i][j]->GetEntries(),
 	      fraction, fraction_err);
 	if(fraction>1e-6 && fraction_err>1e-6){
 	  hoot[i]->SetBinContent(j+1,fraction);
@@ -199,18 +209,8 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 	}
 
 	fraction=-1;
-	fraction_err=-1;
-	errmc(hr[i][j]->GetEntries(),
-	      ht[i][j]->GetEntries(),
-	      fraction, fraction_err);
-	if(fraction>1e-6 && fraction_err>1e-6){
-	  hdigi[i]->SetBinContent(j+1,fraction);
-	  hdigi[i]->SetBinError(j+1,fraction_err);
-	}
-
-	fraction=-1;
 	fraction_err=-1;	
-	nBins = hr[i][j]->GetNbinsX();
+	int nBins = hr[i][j]->GetNbinsX();
 	errmc(hr[i][j]->Integral(2,nBins+1),
 	      hr[i][j]->GetEntries(),
 	      fraction, fraction_err);  
@@ -232,17 +232,11 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 	}
 
 
-
-
-
       }// end of loop over layers
 
     hoot[i]->Write();
-    hdigi[i]->Write();
     hoot_digi[i]->Write();
     hoot_digi_oot[i]->Write();
-
-
   }
 
   

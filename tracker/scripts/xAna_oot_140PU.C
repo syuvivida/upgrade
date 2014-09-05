@@ -16,7 +16,6 @@ std::string subtitle[2]={"Layer","Disk"};
 const int nBunches = 20;
 const int nLayers[2] = {10,15};
 TH1F* hoot[2];
-TH1F* hdigi[2];
 TH1F* hoot_digi[2];
 TH1F* hoot_digi_oot[2];
 TH1I* ht[2][15];
@@ -24,7 +23,9 @@ TH1I* hdiff[2][15];
 TH1I* het[2][15];
 TH1I* hr[2][15];
 
-void errmc(Double_t nsig,Double_t ntotal, Double_t& eff, Double_t& err)
+TH1I* hdiff_digi[2][15][nBunches];
+
+void errmc(float nsig,float ntotal, float& eff, float& err)
 {
   cout << "nsig = " << nsig << " ntotal = " << ntotal << endl;
   if(ntotal<1e-6){eff=-1; err=-1; return;}
@@ -79,6 +80,7 @@ void fillHisto(TreeReader& data, float readoutWindow)
       {
 	if(fabs(tdiff-(Float_t)25*k)< readoutWindow){
 	  hr[decIndex][subLayerIndex]->Fill(k);
+	  hdiff_digi[decIndex][subLayerIndex][k]->Fill(tdiff);
 	  break;
 	}
       }
@@ -153,14 +155,10 @@ void xAna_oot_140PU(std::string fin, std::string mbfin="minbias.txt", float read
   // defining histograms
   for(int k=0; k<2; k++)
     {
-      hoot[k] = new TH1F(Form("hoot_%s",title[k].data()),Form("Fraction of OOT Hits Relative to All Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
-      hdigi[k] = new TH1F(Form("hdigi_%s",title[k].data()),Form("Fraction of Digitized Hits Relative to All Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
-
+      hoot[k] = new TH1F(Form("hoot_%s",title[k].data()),Form("Fraction of Hits Not Digitized In-Time Relative to All Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
       hoot_digi[k] = new TH1F(Form("hoot_digi_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All Digitized Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
+      hoot_digi_oot[k] = new TH1F(Form("hoot_digi_oot_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All Hits Not Digitized In-Time in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
 
-
-      hoot_digi_oot[k] = new TH1F(Form("hoot_digi_oot_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All OOT Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
-      
     }
 
   TH1I* htof     = new TH1I("htof","", 500,0, 500);
@@ -187,6 +185,15 @@ void xAna_oot_140PU(std::string fin, std::string mbfin="minbias.txt", float read
       hr[k][i]->SetXTitle("Number of bunch crossings");
       hr[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 			      subtitle[k].data(),i+1));
+
+      for(int b=0; b< nBunches; b++){
+
+	hdiff_digi[k][i][b]=(TH1I*)htof->Clone(Form("hdiff_digi_%d%02i_%02i",k,i,b));
+	hdiff_digi[k][i][b]->SetXTitle("Difference of TOF from expectation: ns");
+	hdiff_digi[k][i][b]->SetTitle(Form("%s, %s %d in bunch %d",title[k].data(),
+					   subtitle[k].data(),i+1,b));
+      }
+      
     }
   }
 
@@ -200,8 +207,11 @@ void xAna_oot_140PU(std::string fin, std::string mbfin="minbias.txt", float read
 
   std::cout << "nQCDEntries = " << nQCDEntries << "\t nMBEntries = " << nMBEntries << std::endl;
 
-  Long64_t nQCDInput   = (Long64_t)(nMBEntries/140)  > nQCDEntries ? nQCDEntries: nMBEntries/140;
-  Long64_t nMBInput    = (Long64_t)(nMBEntries/140)  > nQCDEntries ? (nQCDEntries*140) : (nQCDInput*140);
+  Long64_t nQCDInput   = nQCDEntries;
+  Long64_t nMBInput    = nMBEntries;
+
+  nQCDInput   = (Long64_t)(nMBEntries/140)  > nQCDEntries ? nQCDEntries: nMBEntries/140;
+  nMBInput    = (Long64_t)(nMBEntries/140)  > nQCDEntries ? (nQCDEntries*140) : (nQCDInput*140);
 
   Long64_t nCount=0;
 
@@ -228,8 +238,8 @@ void xAna_oot_140PU(std::string fin, std::string mbfin="minbias.txt", float read
     // print progress
     if (ev % 50000 == 0)
       fprintf(stderr, "Processing PU event %lli of %lli\n", ev + 1, nMBInput);
-     pu.GetEntry(ev);
-     fillHisto(pu,readoutWindow);
+    pu.GetEntry(ev);
+    fillHisto(pu,readoutWindow);
   } // event loop for pileup Events
   
   
@@ -243,44 +253,34 @@ void xAna_oot_140PU(std::string fin, std::string mbfin="minbias.txt", float read
 	hdiff[i][j]->Write();
 	het[i][j]->Write();
 	hr[i][j]->Write();
+	for(int b=0; b< nBunches; b++)
+	  hdiff_digi[i][j][b]->Write();
 	
 	// compute the fraction of OOT Hits in various ways
 
-	int nBinIndex = 25.0/ht[i][j]->GetBinWidth(1);
-	int nBins = ht[i][j]->GetNbinsX();
-	// number of hits outside of 25 ns windows
-	Long64_t nOOT = ht[i][j]->Integral(nBinIndex+1,nBins+1); 
-	Double_t fraction=-1;
-	Double_t fraction_err=-1;
+	// number of hits not digitized in the first bounch crossing
+	Long64_t nOOT = hdiff[i][j]->GetEntries()-hr[i][j]->GetBinContent(1);
+
+	float fraction=-1;
+	float fraction_err=-1;
 	errmc(nOOT,
-	      ht[i][j]->GetEntries(),
+	      hdiff[i][j]->GetEntries(),
 	      fraction, fraction_err);
-	if(fraction>1e-8 && fraction_err>1e-8){
+	if(fraction>1e-6 && fraction_err>1e-6){
 	  hoot[i]->SetBinContent(j+1,fraction);
 	  hoot[i]->SetBinError(j+1,fraction_err);
 	}
 
 	fraction=-1;
-	fraction_err=-1;
-	errmc(hr[i][j]->GetEntries(),
-	      ht[i][j]->GetEntries(),
-	      fraction, fraction_err);
-	if(fraction>1e-8 && fraction_err>1e-8){
-	  hdigi[i]->SetBinContent(j+1,fraction);
-	  hdigi[i]->SetBinError(j+1,fraction_err);
-	}
-
-	fraction=-1;
 	fraction_err=-1;	
-	nBins = hr[i][j]->GetNbinsX();
+	int nBins = hr[i][j]->GetNbinsX();
 	errmc(hr[i][j]->Integral(2,nBins+1),
 	      hr[i][j]->GetEntries(),
 	      fraction, fraction_err);  
-	if(fraction>1e-8 && fraction_err>1e-8){
+	if(fraction>1e-6 && fraction_err>1e-6){
 	  hoot_digi[i]->SetBinContent(j+1,fraction);
 	  hoot_digi[i]->SetBinError(j+1,fraction_err);
 	}
-
 
 
 	fraction=-1;
@@ -289,19 +289,15 @@ void xAna_oot_140PU(std::string fin, std::string mbfin="minbias.txt", float read
 	errmc(hr[i][j]->Integral(2,nBins+1),
 	      nOOT,
 	      fraction, fraction_err);  
-	if(fraction>1e-8 && fraction_err>1e-8){
+	if(fraction>1e-6 && fraction_err>1e-6){
 	  hoot_digi_oot[i]->SetBinContent(j+1,fraction);
 	  hoot_digi_oot[i]->SetBinError(j+1,fraction_err);
 	}
-
-
 	
       }// end of loop over layers
     hoot[i]->Write();
-    hdigi[i]->Write();
     hoot_digi[i]->Write();
     hoot_digi_oot[i]->Write();
-
   } // end of loop over subdetectors
   hPU->Write();
 
