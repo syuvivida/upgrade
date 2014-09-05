@@ -113,7 +113,6 @@ trkSimHitTree::Fill(const edm::Event& iEvent,  const edm::EventSetup& iSetup )
 //    }
 
 
-   std::map<unsigned int, std::vector<PSimHit>,std::less<unsigned int> > SimHitMap;
 
    for (std::vector<PSimHit>::iterator isim = theTrackerHits.begin();
 	isim != theTrackerHits.end(); ++isim){
@@ -122,7 +121,6 @@ trkSimHitTree::Fill(const edm::Event& iEvent,  const edm::EventSetup& iSetup )
 
 
      nSimHits_++;
-     SimHitMap[(*isim).detUnitId()].push_back((*isim));
 
 
      // create a DetId from the detUnitId
