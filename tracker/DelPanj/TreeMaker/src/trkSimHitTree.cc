@@ -1,6 +1,7 @@
 #include "DelPanj/TreeMaker/interface/trkSimHitTree.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenRunInfoProduct.h"
 
+
 trkSimHitTree::trkSimHitTree(std::string name, TTree* tree):
   baseTree(name,tree)
 {
@@ -87,27 +88,36 @@ trkSimHitTree::Fill(const edm::Event& iEvent,  const edm::EventSetup& iSetup )
 
   // the DetUnits
    TrackingGeometry::DetContainer theDetUnits = theTracker.dets();
-   
+   typedef std::map<unsigned int,std::vector<SimTrack>::iterator> mymap;
+   mymap trkMaps;
+   mymap::iterator it;
+
    for (std::vector<SimTrack>::iterator isimtk = theSimTracks.begin();
-	isimtk != theSimTracks.end(); ++isimtk){
+    	isimtk != theSimTracks.end(); ++isimtk)
+     trkMaps.insert(std::pair<unsigned int,std::vector<SimTrack>::iterator>(isimtk->trackId(), isimtk));
 
      
 
 
-     edm::LogInfo("SimHitTrackerAnalyzer")<<" Track momentum  x = "<<isimtk->momentum().x() <<" y = "<<isimtk->momentum().y() <<" z = "<< isimtk->momentum().z();
-     edm::LogInfo("SimHitTrackerAnalyzer")<<" Track momentum Ptx = "<<std::sqrt(isimtk->momentum().perp2());
-   }
+   //   edm::LogInfo("SimHitTrackerAnalyzer")<<" Track momentum  x = "<<isimtk->momentum().x() <<" y = "<<isimtk->momentum().y() <<" z = "<< isimtk->momentum().z();
+   //   edm::LogInfo("SimHitTrackerAnalyzer")<<" Track momentum Ptx = "<<std::sqrt(isimtk->momentum().perp2());
+   // }
 
-   for (std::vector<SimVertex>::iterator isimvtx = theSimVertexes.begin();
-	isimvtx != theSimVertexes.end(); ++isimvtx){
-     edm::LogInfo("SimHitTrackerAnalyzer")<<" Vertex position  x = "<<isimvtx->position().x() <<" y = "<<isimvtx->position().y() <<" z = "<< isimvtx->position().z();
-   }
+//    for (std::vector<SimVertex>::iterator isimvtx = theSimVertexes.begin();
+// 	isimvtx != theSimVertexes.end(); ++isimvtx){
+// //      edm::LogInfo("SimHitTrackerAnalyzer")<<" Vertex position  x = "<<isimvtx->position().x() <<" y = "<<isimvtx->position().y() <<" z = "<< isimvtx->position().z();
+//      nSimVtxs_++;
+//      vtxX_.push_back(isimvtx->position().x());
+//      vtxY_.push_back(isimvtx->position().y());
+//      vtxZ_.push_back(isimvtx->position().z());
+//    }
 
 
    std::map<unsigned int, std::vector<PSimHit>,std::less<unsigned int> > SimHitMap;
 
    for (std::vector<PSimHit>::iterator isim = theTrackerHits.begin();
 	isim != theTrackerHits.end(); ++isim){
+
 
 
 
@@ -121,13 +131,13 @@ trkSimHitTree::Fill(const edm::Event& iEvent,  const edm::EventSetup& iSetup )
      // get the DetUnit via the DetUnitId and cast it to a StripGeomDetUnit
      const GeomDet * theDet = theTracker.idToDet(theDetUnitId);
 
-     hitLocalX_.push_back(isim->localPosition().x());
-     hitLocalY_.push_back(isim->localPosition().y());
-     hitLocalZ_.push_back(isim->localPosition().z());
+//      hitLocalX_.push_back(isim->localPosition().x());
+//      hitLocalY_.push_back(isim->localPosition().y());
+//      hitLocalZ_.push_back(isim->localPosition().z());
 
-     hitLocalDirectionX_.push_back(isim->localDirection().x());
-     hitLocalDirectionY_.push_back(isim->localDirection().y());
-     hitLocalDirectionZ_.push_back(isim->localDirection().z());
+//      hitLocalDirectionX_.push_back(isim->localDirection().x());
+//      hitLocalDirectionY_.push_back(isim->localDirection().y());
+//      hitLocalDirectionZ_.push_back(isim->localDirection().z());
   
      GlobalPoint g3 = theDet->surface().toGlobal(isim->localPosition());
      hitGlobalX_.push_back(g3.x());
@@ -146,7 +156,27 @@ trkSimHitTree::Fill(const edm::Event& iEvent,  const edm::EventSetup& iSetup )
      hitEntryX_.push_back(entry3_global.x());
      hitEntryY_.push_back(entry3_global.y());
      hitEntryZ_.push_back(entry3_global.z());
-     hitEntryR_.push_back(entry3_global.perp());
+
+//      hitEntryPt_.push_back(isim->momentumAtEntry().perp());
+//      hitEntryPz_.push_back(isim->momentumAtEntry().z());
+
+
+     // relation with tracks
+     it=trkMaps.find(isim->trackId());
+     if(it!=trkMaps.end())
+       {
+	 hitTrkPt_.push_back(it->second->momentum().Pt());
+	 hitTrkPz_.push_back(it->second->momentum().Pz());
+	 hitTrkCharge_.push_back(it->second->charge());
+       }
+     else
+       {
+	 hitTrkPt_.push_back(-99999.);
+	 hitTrkPz_.push_back(-99999.);
+	 hitTrkCharge_.push_back(-99999.);
+       }
+       
+
 
      Local3DPoint exit3  = isim->exitPoint();
      GlobalPoint exit3_global = theDet->surface().toGlobal(exit3);
@@ -154,7 +184,6 @@ trkSimHitTree::Fill(const edm::Event& iEvent,  const edm::EventSetup& iSetup )
      hitExitX_.push_back(exit3_global.x());
      hitExitY_.push_back(exit3_global.y());
      hitExitZ_.push_back(exit3_global.z());
-     hitExitR_.push_back(exit3_global.perp());
 
      hitTof_.push_back(isim->timeOfFlight());
      hitEloss_.push_back(isim->energyLoss());
@@ -212,13 +241,18 @@ trkSimHitTree::Fill(const edm::Event& iEvent,  const edm::EventSetup& iSetup )
 void  
 trkSimHitTree::SetBranches(){
 
+//   AddBranch(&nSimVtxs_,"nSimVtxs"); 
+//   AddBranch(&vtxX_,"simVtxX");
+//   AddBranch(&vtxY_,"simVtxY");
+//   AddBranch(&vtxZ_,"simVtxZ");
+
   AddBranch(&nSimHits_,"nSimHits"); 
-  AddBranch(&hitLocalX_,"hitLocalX");
-  AddBranch(&hitLocalY_,"hitLocalY");
-  AddBranch(&hitLocalZ_,"hitLocalZ");
-  AddBranch(&hitLocalDirectionX_,"hitLocalDirectionX");
-  AddBranch(&hitLocalDirectionY_,"hitLocalDirectionY");
-  AddBranch(&hitLocalDirectionZ_,"hitLocalDirectionZ");
+//   AddBranch(&hitLocalX_,"hitLocalX");
+//   AddBranch(&hitLocalY_,"hitLocalY");
+//   AddBranch(&hitLocalZ_,"hitLocalZ");
+//   AddBranch(&hitLocalDirectionX_,"hitLocalDirectionX");
+//   AddBranch(&hitLocalDirectionY_,"hitLocalDirectionY");
+//   AddBranch(&hitLocalDirectionZ_,"hitLocalDirectionZ");
   
   AddBranch(&hitGlobalX_,"hitGlobalX");
   AddBranch(&hitGlobalY_,"hitGlobalY");
@@ -233,12 +267,18 @@ trkSimHitTree::SetBranches(){
   AddBranch(&hitExitX_,"hitExitX");
   AddBranch(&hitExitY_,"hitExitY");
   AddBranch(&hitExitZ_,"hitExitZ");
-  AddBranch(&hitExitR_,"hitExitR");
 
   AddBranch(&hitEntryX_,"hitEntryX");
   AddBranch(&hitEntryY_,"hitEntryY");
   AddBranch(&hitEntryZ_,"hitEntryZ");
-  AddBranch(&hitEntryR_,"hitEntryR");
+//   AddBranch(&hitEntryPt_,"hitEntryPt");
+//   AddBranch(&hitEntryPz_,"hitEntryPz");
+
+  AddBranch(&hitTrkPt_,"hitTrkPt");
+  AddBranch(&hitTrkPz_,"hitTrkPz");
+  AddBranch(&hitTrkCharge_,"hitTrkCharge");
+  
+
 
   AddBranch(&hitTof_,"hitTof");
   AddBranch(&hitEloss_,"hitEloss");
@@ -263,13 +303,19 @@ trkSimHitTree::SetBranches(){
 void  
 trkSimHitTree::Clear(){
 
+//   nSimVtxs_ = 0;
+
+//   vtxX_.clear();
+//   vtxY_.clear();
+//   vtxZ_.clear();
+
   nSimHits_ = 0;
-  hitLocalX_.clear();
-  hitLocalY_.clear();
-  hitLocalZ_.clear();
-  hitLocalDirectionX_.clear();
-  hitLocalDirectionY_.clear();
-  hitLocalDirectionZ_.clear();
+//   hitLocalX_.clear();
+//   hitLocalY_.clear();
+//   hitLocalZ_.clear();
+//   hitLocalDirectionX_.clear();
+//   hitLocalDirectionY_.clear();
+//   hitLocalDirectionZ_.clear();
   
   hitGlobalX_.clear();
   hitGlobalY_.clear();
@@ -284,15 +330,19 @@ trkSimHitTree::Clear(){
   hitExitX_.clear();
   hitExitY_.clear();
   hitExitZ_.clear();
-  hitExitR_.clear();
 
   hitEntryX_.clear();
   hitEntryY_.clear();
   hitEntryZ_.clear();
-  hitEntryR_.clear();
+//   hitEntryPt_.clear();
+//   hitEntryPz_.clear();
 
   hitTof_.clear();
   hitEloss_.clear();
+
+  hitTrkPt_.clear();
+  hitTrkPz_.clear();
+  hitTrkCharge_.clear();
 
   hitPID_.clear();
   hitProcessType_.clear();

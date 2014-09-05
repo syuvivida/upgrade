@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+#include <map>
 #include <iostream>
 #include <string>
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -60,15 +61,14 @@ class trkSimHitTree : public baseTree{
   void Fill(const edm::Event& iEvent, edm::EventSetup const& iSetup) ; 
   void SetBranches();
   void Clear();
-  
 
   Int_t nSimHits_;
-  std::vector<Float_t> hitLocalX_;
-  std::vector<Float_t> hitLocalY_;
-  std::vector<Float_t> hitLocalZ_;
-  std::vector<Float_t> hitLocalDirectionX_;
-  std::vector<Float_t> hitLocalDirectionY_;
-  std::vector<Float_t> hitLocalDirectionZ_;
+  //  std::vector<Float_t> hitLocalX_;
+  //  std::vector<Float_t> hitLocalY_;
+  //  std::vector<Float_t> hitLocalZ_;
+  //  std::vector<Float_t> hitLocalDirectionX_;
+  //  std::vector<Float_t> hitLocalDirectionY_;
+  //  std::vector<Float_t> hitLocalDirectionZ_;
 
   std::vector<Float_t> hitGlobalX_;
   std::vector<Float_t> hitGlobalY_;
@@ -84,12 +84,15 @@ class trkSimHitTree : public baseTree{
   std::vector<Float_t> hitExitX_;
   std::vector<Float_t> hitExitY_;
   std::vector<Float_t> hitExitZ_;
-  std::vector<Float_t> hitExitR_;
 
   std::vector<Float_t> hitEntryX_;
   std::vector<Float_t> hitEntryY_;
   std::vector<Float_t> hitEntryZ_;
-  std::vector<Float_t> hitEntryR_;
+
+  std::vector<Float_t> hitTrkPt_;
+  std::vector<Float_t> hitTrkPz_;
+  std::vector<Float_t>   hitTrkCharge_;
+
 
   std::vector<Float_t> hitTof_;
   std::vector<Float_t> hitEloss_;
