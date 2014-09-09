@@ -20,10 +20,10 @@ std::string dataset[3]={"QCD+140PU","QCD","MinBias"};
 void plot(std::string histoName, std::string xtitle)
 {
   nCanvas++;
-  double x1NDC = (nCanvas%2==0)? 0.6264 : 0.1322;
-  double y1NDC = 0.6835;
-  double x2NDC = (nCanvas%2==0)? 0.8764 : 0.3822;
-  double y2NDC = 0.8860;
+  double x1NDC = (nCanvas%3==2)? 0.1322: 0.6264;
+  double y1NDC = (nCanvas%3==2)? 0.6835: 0.1414;
+  double x2NDC = (nCanvas%3==2)? 0.3822: 0.8764;
+  double y2NDC = (nCanvas%3==2)? 0.8860: 0.3439;
 
   TLegend* leg = new TLegend(x1NDC,y1NDC,x2NDC,y2NDC);
   leg->SetFillColor(0);
