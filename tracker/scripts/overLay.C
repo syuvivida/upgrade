@@ -17,7 +17,7 @@ int nCanvas=0;
 std::string dataset[3]={"QCD+140PU","QCD","MinBias"};
 
 
-void overLay(std::string histoName, std::string xtitle)
+void plot(std::string histoName, std::string xtitle)
 {
   nCanvas++;
   double x1NDC = (nCanvas%2==0)? 0.6264 : 0.1322;
