@@ -19,7 +19,7 @@ lastfile=$3
 while [ $iteration -lt $lastfile ]; 
 do
   iteration=$(( iteration + 1 ))
-  number=`grep -a "patTuple_"$iteration"_" $1 | wc -l`
+  number=`grep -a "minbias_"$iteration"_" $1 | wc -l`
   rm -rf temp
   if [ $((number)) -gt 1 ]; then 
       echo $iteration "has problem"; 
