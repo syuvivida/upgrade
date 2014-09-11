@@ -76,6 +76,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
   TH1I* het[2][15];
   TH1I* hr[2][15];
   TH1I* hdiff_digi[2][15][nBunches];
+  TH1I* hpt_digi[2][15];
 
   for(int k=0;k<2; k++){
     for(int i=0;i<15;i++){
@@ -100,6 +101,11 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
       hr[k][i]->SetXTitle("Number of bunch crossings");
       hr[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 			      subtitle[k].data(),i+1));
+
+      hpt_digi[k][i]=(TH1I*)hetof->Clone(Form("hpt_digi%d%02i",k,i));
+      hpt_digi[k][i]->SetXTitle("p_{T} of corresponding tracks of Digitized OOT Hits");
+      hpt_digi[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
+				    subtitle[k].data(),i+1));
 
      for(int b=0; b< nBunches; b++){
 
@@ -134,13 +140,17 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
     Float_t* gx    = data.GetPtrFloat("hitGlobalX");
     Float_t* gy    = data.GetPtrFloat("hitGlobalY");
     Float_t* gz    = data.GetPtrFloat("hitGlobalZ");
-
+    Float_t* trkPt = data.GetPtrFloat("hitTrkPt");
+    Float_t* trkCharge = data.GetPtrFloat("hitTrkCharge");
  
     for(int i=0; i < nHits; i++){
 
+      // remove neutral particles
+      if(fabs(trkCharge[i])<1e-6)continue; 
+      
       if(PID[i]== 22 || PID[i]== 12 || PID[i]== 14 || PID[i]== 16 
-	 || PID[i]== 130 || PID[i]== 310 || PID[i]== 311 || PID[i] == 2112 ||
-	 PID[i]== 3122)continue;
+       	 || PID[i]== 130 || PID[i]== 310 || PID[i]== 311 || PID[i] == 2112 ||
+      	 PID[i]== 3122)continue;
 
       int hitLayerIndex = layer[i]-1;
       int hitDiskIndex  = disk[i]-1;
@@ -168,6 +178,8 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 	    if(decIndex==0 && subLayerIndex==0)nCount++;
 	    hr[decIndex][subLayerIndex]->Fill(k);
 	    hdiff_digi[decIndex][subLayerIndex][k]->Fill(tdiff);
+	    if(k>0)
+	      hpt_digi[decIndex][subLayerIndex]->Fill(trkPt[i]);
 	    break;
 	  }
 	}
@@ -189,7 +201,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 	hdiff[i][j]->Write();
 	het[i][j]->Write();
 	hr[i][j]->Write();
-
+	hpt_digi[i][j]->Write();
 	for(int b=0; b< nBunches; b++)
 	  hdiff_digi[i][j][b]->Write();
 
