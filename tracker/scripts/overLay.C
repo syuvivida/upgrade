@@ -5,6 +5,7 @@
 #include <TCanvas.h>
 #include <TStyle.h>
 #include <TLegend.h>
+#include <TSystem.h>
 
 using namespace std;
 
@@ -13,7 +14,7 @@ TH1F* h[3];
 int COLOR[3]={kRed, kBlack, kBlue};
 int MARKER[3]={8, 24, 34};
 int nCanvas=0;
-
+TCanvas* c1;
 std::string dataset[3]={"QCD+140PU","QCD","MinBias"};
 
 
@@ -50,7 +51,7 @@ void plot(std::string histoName, std::string xtitle)
     
   }
   leg->Draw("same");
-
+  c1->Print(Form("fig/%s.pdf",histoName.data()));
 }
 
 
@@ -64,9 +65,9 @@ void overLay(){
 
   std::string filename = "all.pdf";
 
+  gSystem->mkdir("fig");
   
-  
-  TCanvas* c1 = new TCanvas("c1","",700,500);
+  c1 = new TCanvas("c1","",700,500);
   gStyle->SetOptStat(0);
 
   c1->cd();

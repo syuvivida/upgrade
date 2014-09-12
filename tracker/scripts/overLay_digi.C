@@ -35,6 +35,12 @@ void overLay_digi(std::string fin)
   int count=0;
   for(int i=0; i<2; i++){
     for(int k=0; k< nLayers[i]; k++){
+      TH1I* hpt = (TH1I*)f->FindObjectAny(Form("hpt_digi%d%02i",i,k));
+      hpt->SetLineWidth(2);
+      hpt->SetLineColor(1);
+      hpt->Draw();
+      c1->Print(Form("fig/pt_%d_%02i.pdf",i,k));
+      
       TH1I* hall = (TH1I*)f->FindObjectAny(Form("hdiff%d%02i",i,k));
       hall->SetLineWidth(2);
       hall->SetLineColor(1);
