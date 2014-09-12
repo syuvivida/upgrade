@@ -4,12 +4,28 @@
 #include <TFile.h>
 #include <TCanvas.h>
 #include <TStyle.h>
+#include <TSystem.h>
 
 using namespace std;
+TFile* inf;
+TCanvas* c1;
+
+void plotHisto(std::string histoName, std::string xtitle)
+{
+  TH1F* h1 = (TH1F*)inf->FindObjectAny(histoName.data());
+  h1->SetMinimum(0);
+  h1->SetXTitle(xtitle.data());
+  h1->SetMarkerColor(4);
+  h1->SetMarkerStyle(8);
+  h1->SetMarkerSize(1);
+  h1->Draw();
+  c1->Print(Form("fig/%s.pdf",histoName.data()));
+
+}
 
 void plot(std::string fin){
 
-  TFile *inf = new TFile(fin.data());
+  inf = new TFile(fin.data());
   std::string remword = ".root";
   size_t pos  = fin.find(remword);
   std::string filename = fin;
@@ -18,47 +34,28 @@ void plot(std::string fin){
   filename += ".pdf";
   cout << filename << endl;
 
-  
-  TCanvas* c1 = new TCanvas("c1","",700,500);
+  gSystem->mkdir("fig");
+  c1 = new TCanvas("c1","",700,500);
   gStyle->SetOptStat(0);
 
   c1->cd();
 
-  TH1F* h1 = (TH1F*)inf->FindObjectAny("hoot_Barrel");
-  h1->SetMinimum(0);
-  h1->SetXTitle("Layer");
-  h1->Draw();
+  plotHisto("hoot_Barrel","Layer");
   c1->Print(Form("%s(",filename.data()));
 
-  TH1F* h3 = (TH1F*)inf->FindObjectAny("hoot_digi_Barrel");
-  h3->SetMinimum(0);
-  h3->SetXTitle("Layer");
-  h3->Draw();
+  plotHisto("hoot_digi_Barrel","Layer");
+  c1->Print(filename.data());
+  
+  plotHisto("hoot_digi_oot_Barrel","Layer");
   c1->Print(filename.data());
 
-  TH1F* h4 = (TH1F*)inf->FindObjectAny("hoot_digi_oot_Barrel");
-  h4->SetMinimum(0);
-  h4->SetXTitle("Layer");
-  h4->Draw();
+  plotHisto("hoot_Endcap","Disk");
+  c1->Print(filename.data());
+  
+  plotHisto("hoot_digi_Endcap","Disk");
   c1->Print(filename.data());
 
-
-  TH1F* h5 = (TH1F*)inf->FindObjectAny("hoot_Endcap");
-  h5->SetMinimum(0);
-  h5->SetXTitle("Disk");
-  h5->Draw();
-  c1->Print(filename.data());
-
-  TH1F* h7 = (TH1F*)inf->FindObjectAny("hoot_digi_Endcap");
-  h7->SetMinimum(0);
-  h7->SetXTitle("Disk");
-  h7->Draw();
-  c1->Print(filename.data());
-
-  TH1F* h8 = (TH1F*)inf->FindObjectAny("hoot_digi_oot_Endcap");
-  h8->SetMinimum(0);
-  h8->SetXTitle("Disk");
-  h8->Draw();
+  plotHisto("hoot_digi_oot_Endcap","Disk");
   c1->Print(Form("%s)",filename.data()));
   
   

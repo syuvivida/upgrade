@@ -5,7 +5,7 @@
 #include <TCanvas.h>
 #include <TStyle.h>
 #include <TLegend.h>
-
+#include <TSystem.h>
 using namespace std;
 
 int COLOR[]={kRed, kBlue, kOrange, kGreen};
@@ -25,6 +25,7 @@ void overLay_digi(std::string fin)
   std::string filename2 = "zoomIn_" + filename;
 
   TFile* f  = new TFile(fin.data());
+  gSystem->mkdir("fig");
 
   TCanvas* c1 = new TCanvas("c1","",700,500);
 
@@ -73,7 +74,7 @@ void overLay_digi(std::string fin)
 	hb->Draw("histsame");
 	
       }
-
+      c1->Print(Form("fig/digi_%d_%02i.pdf",i,k));
       if(count==0)
 	c1->Print(Form("%s(",filename2.data()));
       else if(i==1 && k== nLayers[i]-1)
