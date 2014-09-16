@@ -68,7 +68,7 @@ void overLay_digi(std::string fin)
 
       // zoom-in figures
       c1->Clear();
-      hall->GetXaxis()->SetRange(0,100);
+      hall->GetXaxis()->SetRangeUser(0,100);
       hall->Draw("hist");
       
       for(int b=0; b < nBunches; b++){
