@@ -205,44 +205,27 @@ void chchen_oot(std::string fin, float readoutWindow=3){ // readoutWindow defaul
       int hitLayerIndex = layer[i]-1;
       int hitDiskIndex  = disk[i]-1;
 
-   	
-      Float_t calPt = trkPt[i];
       Float_t calPz = trkPz[i];
       Float_t calVz = sqrt(( calPz* calPz)/(calPz* calPz+0.01));
-      Float_t calVt = sqrt(( calPt* calPt)/(calPt* calPt+0.01));
-      //float calVt = 1;
-      //cout<<"calVt="<<calVt<<endl;    
-      Float_t gloXY = sqrt(gx[i]*gx[i]+gy[i]*gy[i]) ;
-      Float_t BR = calPt*0.877; //=pt/qB
-      Float_t sineAngle =gloXY/BR/200; 
-      if(sineAngle>1)sineAngle=0;             
-      Float_t arcsin =asin(sineAngle);       
-      Float_t calR =arcsin*BR*2;       
-      Float_t timeT = (calR*1000000000)/calVt/299792458;
-      if(timeT==0)timeT=gloXY/30;
       Float_t timeZ =(abs(gz[i])*10000000)/calVz/299792458;
-      if (timeZ>timeT)timeT=timeZ;
-      
 
       Float_t pathlength = sqrt(gx[i]*gx[i] +
 				gy[i]*gy[i] +
 				gz[i]*gz[i]);
       Float_t expectedTime = pathlength/30;
-
       Float_t time = tof[i];
-
       Float_t tdiff = fabs(time-expectedTime);
-      Float_t tdiff2 = fabs(time-timeT);
+      Float_t tdiff2 = fabs(time-timeZ);
       Int_t decIndex = decID[i]-1;
 	
       int subLayerIndex = decIndex==0? hitLayerIndex: hitDiskIndex;
 
       ht[decIndex][subLayerIndex]->Fill(time);
       het[decIndex][subLayerIndex]->Fill(expectedTime);
-      het2[decIndex][subLayerIndex]->Fill(timeT);
+      het2[decIndex][subLayerIndex]->Fill(timeZ);
       hdiff[decIndex][subLayerIndex]->Fill(tdiff);
       hdiff2[decIndex][subLayerIndex]->Fill(tdiff2);
-      for(int k=0; k < nBunches; k++)
+      for(int k=0; k < nBunches; k++) 
 	{
 	  if(fabs(tdiff-(Float_t)25*k)< readoutWindow){
 	    if(decIndex==0 && subLayerIndex==0)nCount++;
