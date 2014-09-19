@@ -19,7 +19,7 @@ void overLay_digi(std::string fin)
   std::string filename = fin;
   if(pos!= std::string::npos)
     filename.swap(filename.erase(pos,remword.length()));
-  filename += ".pdf";
+  filename += "_allbunches.pdf";
   cout << filename << endl;
 
   std::string filename2 = "zoomIn_" + filename;
