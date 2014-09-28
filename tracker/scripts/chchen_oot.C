@@ -281,14 +281,15 @@ void chchen_oot(std::string fin, float readoutWindow=3){ // readoutWindow defaul
 	// compute the fraction of OOT Hits in various ways
 
 	// number of hits not digitized in the first bounch crossing
-	Long64_t nOOT = hdiff[i][j]->GetEntries()-hr[i][j]->GetBinContent(1);
-
+	//Long64_t nOOT = hdiff[i][j]->GetEntries()-hr[i][j]->GetBinContent(1);
+        Long64_t nOOT = hdiff[i][j]->GetEntries()-hdiff[i][j]->Integral(25,501);
+        Long64_t nOOT2 = hdiff2[i][j]->GetEntries()-hdiff2[i][j]->Integral(25,501);
 	float fraction=-1;
 	float fraction_err=-1;
 	errmc(nOOT,
 	      hdiff[i][j]->GetEntries(),
 	      fraction, fraction_err,hoot[i],j);
-        errmc(nOOT,
+        errmc(nOOT2,
 	      hdiff2[i][j]->GetEntries(),
 	      fraction, fraction_err,hoot2[i],j);
 	
@@ -304,7 +305,7 @@ void chchen_oot(std::string fin, float readoutWindow=3){ // readoutWindow defaul
 	      nOOT,
 	      fraction, fraction_err, hoot_digi_oot[i],j);  
         errmc(hr2[i][j]->Integral(2,nBins+1),
-	      nOOT,
+	      nOOT2,
 	      fraction, fraction_err, hoot_digi_oot2[i],j);  
 
       }// end of loop over layers
