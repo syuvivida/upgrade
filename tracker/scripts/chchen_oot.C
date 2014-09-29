@@ -282,8 +282,8 @@ void chchen_oot(std::string fin, float readoutWindow=3){ // readoutWindow defaul
 
 	// number of hits not digitized in the first bounch crossing
 	//Long64_t nOOT = hdiff[i][j]->GetEntries()-hr[i][j]->GetBinContent(1);
-        Long64_t nOOT = hdiff[i][j]->GetEntries()-hdiff[i][j]->Integral(25,501);
-        Long64_t nOOT2 = hdiff2[i][j]->GetEntries()-hdiff2[i][j]->Integral(25,501);
+        Long64_t nOOT = hdiff[i][j]->GetEntries()-hdiff[i][j]->Integral(1,24);
+        Long64_t nOOT2 = hdiff2[i][j]->GetEntries()-hdiff2[i][j]->Integral(1,24);
 	float fraction=-1;
 	float fraction_err=-1;
 	errmc(nOOT,
