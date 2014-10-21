@@ -18,7 +18,7 @@ b=-1;
 
 void errmc(float nsig,float ntotal, float& eff, float& err ,TH1F* fHisto,int& j )
 {
-  cout << "nsig = " << nsig << " ntotal = " << ntotal << endl;
+  //cout << "nsig = " << nsig << " ntotal = " << ntotal << endl;
   if(ntotal<1e-6){eff=-1; err=-1; return;}
   eff = nsig/ntotal;
   err = sqrt( (1-eff)*eff/ntotal);
@@ -89,6 +89,8 @@ void chchen_oot(std::string fin, float readoutWindow=3){ // readoutWindow defaul
   TH1I* htof     = new TH1I("htof","", 500,0, 500);
   TH1I* hetof    = new TH1I("hetof","", 100,0, 20);
   TH1I* hread    = new TH1I("hread","",nBunches,0,(float)(nBunches));
+  TH1I* trkpt    = new TH1I("trkpt","",100,0,12);
+  // TH1I* trksurpt = new TH1I("trksurpt","",100,0,0.12);
   TH1I* ht[2][15];
   TH1I* hdiff[2][15];
   TH1I* hdiff2[2][15];
@@ -175,8 +177,10 @@ void chchen_oot(std::string fin, float readoutWindow=3){ // readoutWindow defaul
     data.GetEntry(ev);
     
     Int_t  nHits = data.GetInt("nSimHits"); 
+    Int_t  nTrks = data.GetInt("nSimTrks");
     Int_t* decID = data.GetPtrInt("hitSubDec");
     Int_t* PID   = data.GetPtrInt("hitPID");
+    Int_t* trkPID =data.GetPtrInt("trkPID");
     //     Int_t* proc  = data.GetPtrInt("hitProcessType");
     Int_t* layer = data.GetPtrInt("hitLayer");
     Int_t* disk  = data.GetPtrInt("hitDisk");
@@ -190,9 +194,17 @@ void chchen_oot(std::string fin, float readoutWindow=3){ // readoutWindow defaul
     Float_t* trkPt = data.GetPtrFloat("hitTrkPt");
     Float_t* trkPz = data.GetPtrFloat("hitTrkPz");
     Float_t* trkCharge = data.GetPtrFloat("hitTrkCharge");
- 
- 
-   
+    //Float_t* trksurPt =data.GetPtrFloat("TrkSurPt");
+    Float_t* trkCharge2 = data.GetPtrFloat("trkCharge");
+    Float_t* trkPt2 =  data.GetPtrFloat("trkPt");
+    for(int i=0; i < nTrks; i++){
+      if(trkCharge2[i]>1e-5)trkpt->Fill(trkPt2[i]);
+      if(trkPt[i]<0.1)
+	{
+          cout<<"trkPID="<<trkPID[i]<<endl;
+                                       
+        }
+}
     for(int i=0; i < nHits; i++){
 
       // remove neutral particles
@@ -219,7 +231,8 @@ void chchen_oot(std::string fin, float readoutWindow=3){ // readoutWindow defaul
       Int_t decIndex = decID[i]-1;
 	
       int subLayerIndex = decIndex==0? hitLayerIndex: hitDiskIndex;
-
+      //trkpt->Fill(trkPt[i]);
+      //trksurpt->Fill(trksurPt[i]);
       ht[decIndex][subLayerIndex]->Fill(time);
       het[decIndex][subLayerIndex]->Fill(expectedTime);
       het2[decIndex][subLayerIndex]->Fill(timeZ);
@@ -258,8 +271,8 @@ void chchen_oot(std::string fin, float readoutWindow=3){ // readoutWindow defaul
 
   } // event loop
 
-  std::cout << "nCount = " << nCount << std::endl;
-  std::cout << "nCount2 = " << nCount2 << std::endl;
+  //std::cout << "nCount = " << nCount << std::endl;
+  //std::cout << "nCount2 = " << nCount2 << std::endl;
   TFile* outFile = new TFile("histo_oot.root","recreate");       
 
   for(int i=0;i<2;i++){
@@ -319,6 +332,7 @@ void chchen_oot(std::string fin, float readoutWindow=3){ // readoutWindow defaul
     hoot_digi_oot[i]->Write();
     hoot_digi_oot2[i]->Write();
  }
-  
+  trkpt->Write();
+  //trksurpt->Write();
   outFile->Close();
 }
