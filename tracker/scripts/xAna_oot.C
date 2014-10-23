@@ -192,7 +192,8 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
   } // event loop
 
   std::cout << "nCount = " << nCount << std::endl;
-  TFile* outFile = new TFile("histo_oot.root","recreate");       
+  std::string outfileName = Form("histo_oot_%d.root",(int)readoutWindow);
+  TFile* outFile = new TFile(outfileName.data(),"recreate");       
 
   for(int i=0;i<2;i++){
     for(int j=0; j<nLayers[i] ;j++)
