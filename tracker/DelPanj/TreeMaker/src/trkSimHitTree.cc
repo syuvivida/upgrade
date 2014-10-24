@@ -99,10 +99,6 @@ trkSimHitTree::Fill(const edm::Event& iEvent,  const edm::EventSetup& iSetup )
 
      nSimTrks_++;
 
-     trkSurX_.push_back(isimtk->trackerSurfacePosition().X());
-     trkSurY_.push_back(isimtk->trackerSurfacePosition().Y());
-     trkSurZ_.push_back(isimtk->trackerSurfacePosition().Z());
-
      trkPhi_.push_back(isimtk->momentum().Phi());
      trkEta_.push_back(isimtk->momentum().Eta());
      trkPx_.push_back(isimtk->momentum().Px());
@@ -264,9 +260,6 @@ trkSimHitTree::SetBranches(){
 
   AddBranch(&nSimTrks_,"nSimTrks"); 
 
-  AddBranch(&trkSurX_,"trkSurX");
-  AddBranch(&trkSurY_,"trkSurY");
-  AddBranch(&trkSurZ_,"trkSurZ");
 
   AddBranch(&trkE_,"trkE");
   AddBranch(&trkPx_,"trkPx");
@@ -328,9 +321,6 @@ trkSimHitTree::Clear(){
 
   nSimTrks_ = 0;
 
-  trkSurX_.clear();
-  trkSurY_.clear();
-  trkSurZ_.clear();
   trkE_.clear();
   trkPx_.clear();
   trkPy_.clear();
