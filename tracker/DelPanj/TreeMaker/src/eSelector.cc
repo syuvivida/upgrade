@@ -69,8 +69,7 @@ eSelector::CutRecord(const pat::Electron& e){
   
   
  
-  Double_t iso4 = 999.;
-  iso4 = GetCorrElecPfIso(e)/TMath::Max((Double_t)0.1,pt);
+  Double_t iso4 = 0.;
  
 
 

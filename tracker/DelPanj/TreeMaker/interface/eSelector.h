@@ -17,7 +17,6 @@
 #include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
-#include "EGamma/EGammaAnalysisTools/interface/ElectronEffectiveArea.h"
 #include "TMath.h"
 
 class eSelector{
@@ -40,33 +39,6 @@ class eSelector{
     return iso4;
   }
 
-  // remove the contribution of pileups using the official recipe
-  Double_t GetCorrElecPfIso(const pat::Electron &e)
-  {
-    Double_t iso1 = 999.;
-    Double_t iso2 = 999.;
-    Double_t iso3 = 999.;
-    Double_t iso4 = 999.;
-
-    iso1  =  e.chargedHadronIso();                                                                                                                                     
-    iso2  =  e.neutralHadronIso();                                                                                                                                     
-    iso3  =  e.photonIso();                                                                                                                                            
-
-    ElectronEffectiveArea::ElectronEffectiveAreaTarget effAreaTarget_ = 
-      ElectronEffectiveArea::kEleEAData2012;
-      
-    ElectronEffectiveArea::ElectronEffectiveAreaType effAreaType_ =
-      ElectronEffectiveArea::kEleGammaAndNeutralHadronIso03;      
-    
-    Double_t eta = e.superCluster()->eta();
-    Double_t AEff = ElectronEffectiveArea::GetElectronEffectiveArea
-      (effAreaType_, fabs(eta), effAreaTarget_);
-    iso4 = iso1 + TMath::Max((Double_t)0.0, iso2+iso3-rho_*AEff);
-    
-    //Calculate combined and beta corrected Iso                                                                                                   
-    
-    return iso4;
-  }  
   ~eSelector(){}
   
   Double_t ptX_;

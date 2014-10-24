@@ -155,9 +155,6 @@ patElecTree::Fill(const edm::Event& iEvent){
     patElecPassID_.push_back(passOrNot);
 
 
-    Float_t corrPfIso = e2012ID_.GetCorrElecPfIso(*ele);
-    patElecCorrPfIso_.push_back(corrPfIso);
-
     Float_t corrTauPfIso =  e2012ID_.GetTauCorrElecPfIso(*ele);
     patElecTauCorrPfIso_.push_back(corrTauPfIso);
 

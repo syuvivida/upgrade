@@ -62,13 +62,8 @@ class trkSimHitTree : public baseTree{
   void SetBranches();
   void Clear();
 
+  // hit-level information
   Int_t nSimHits_;
-  //  std::vector<Float_t> hitLocalX_;
-  //  std::vector<Float_t> hitLocalY_;
-  //  std::vector<Float_t> hitLocalZ_;
-  //  std::vector<Float_t> hitLocalDirectionX_;
-  //  std::vector<Float_t> hitLocalDirectionY_;
-  //  std::vector<Float_t> hitLocalDirectionZ_;
 
   std::vector<Float_t> hitGlobalX_;
   std::vector<Float_t> hitGlobalY_;
@@ -89,11 +84,6 @@ class trkSimHitTree : public baseTree{
   std::vector<Float_t> hitEntryY_;
   std::vector<Float_t> hitEntryZ_;
 
-  std::vector<Float_t> hitTrkPt_;
-  std::vector<Float_t> hitTrkPz_;
-  std::vector<Float_t>   hitTrkCharge_;
-
-
   std::vector<Float_t> hitTof_;
   std::vector<Float_t> hitEloss_;
 
@@ -112,6 +102,27 @@ class trkSimHitTree : public baseTree{
   
   // for both barrel and endcap
   std::vector<Int_t>   hitModule_; 
+
+  std::vector<Int_t>   hitTrkIndex_;
+
+
+  Int_t nSimTrks_;
+
+  std::vector<Float_t> trkSurX_;
+  std::vector<Float_t> trkSurY_;
+  std::vector<Float_t> trkSurZ_;
+  
+  std::vector<Float_t> trkE_;
+  std::vector<Float_t> trkPx_;
+  std::vector<Float_t> trkPy_;
+  std::vector<Float_t> trkPz_;
+  std::vector<Float_t> trkPt_;
+  std::vector<Float_t> trkEta_;
+  std::vector<Float_t> trkPhi_;
+  std::vector<Float_t> trkCharge_;
+
+  std::vector<Int_t>   trkPID_;
+  std::vector<Int_t>   trkGenIndex_;
 
 };
 
