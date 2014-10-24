@@ -68,6 +68,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
       
     }
 
+  TH1I* htof_diff= new TH1I("htof_diff","", 400,-10,10);
   TH1I* htof     = new TH1I("htof","", 500,0, 500);
   TH1I* hetof    = new TH1I("hetof","", 100,0, 20);
   TH1I* hread    = new TH1I("hread","",nBunches,0,(float)(nBunches));
@@ -87,7 +88,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
       ht[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 			      subtitle[k].data(),i+1));
 
-      hdiff[k][i]=(TH1I*)htof->Clone(Form("hdiff%d%02i",k,i));
+      hdiff[k][i]=(TH1I*)htof_diff->Clone(Form("hdiff%d%02i",k,i));
       hdiff[k][i]->SetXTitle("Difference of TOF from expectation: ns");
       hdiff[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 				 subtitle[k].data(),i+1));
@@ -130,7 +131,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
     Int_t  nHits = data.GetInt("nSimHits");
     Int_t* decID = data.GetPtrInt("hitSubDec");
     Int_t* PID   = data.GetPtrInt("hitPID");
-    //     Int_t* proc  = data.GetPtrInt("hitProcessType");
+    Int_t* proc  = data.GetPtrInt("hitProcessType");
     Int_t* layer = data.GetPtrInt("hitLayer");
     Int_t* disk  = data.GetPtrInt("hitDisk");
 
@@ -140,13 +141,26 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
     Float_t* gx    = data.GetPtrFloat("hitGlobalX");
     Float_t* gy    = data.GetPtrFloat("hitGlobalY");
     Float_t* gz    = data.GetPtrFloat("hitGlobalZ");
-    Float_t* trkPt = data.GetPtrFloat("hitTrkPt");
-    Float_t* trkCharge = data.GetPtrFloat("hitTrkCharge");
+    Int_t* trkIndex = data.GetPtrInt("hitTrkIndex");
+    Float_t* trkPt  = data.GetPtrFloat("trkPt");
+    Float_t* trkPz  = data.GetPtrFloat("trkPz");
+    Float_t* trkE   = data.GetPtrFloat("trkE");
+    Float_t* trkCharge = data.GetPtrFloat("trkCharge");
+
+    Int_t* trkGenIndex = data.GetPtrInt("trkGenIndex");
+    Int_t* trkPID = data.GetPtrInt("trkPID");
  
     for(int i=0; i < nHits; i++){
 
+
+      Int_t itrk = trkIndex[i];
+
+      if(proc[i]!=2)continue;
+
+      if(itrk<0)continue;
+
       // remove neutral particles
-      if(fabs(trkCharge[i])<1e-6)continue; 
+      if(fabs(trkCharge[itrk])<1e-6)continue; 
       
       if(PID[i]== 22 || PID[i]== 12 || PID[i]== 14 || PID[i]== 16 
        	 || PID[i]== 130 || PID[i]== 310 || PID[i]== 311 || PID[i] == 2112 ||
@@ -160,6 +174,14 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 				gz[i]*gz[i]);
       Float_t expectedTime = pathlength/30;
 
+      // more accurate way of computation
+
+      Float_t calPz = trkPz[itrk];
+      Float_t calE  = trkE[itrk];
+      Float_t calVz = calPz/calE *299792458*1e-7;
+
+      Float_t expectedTimeZ =abs(gz[i]/calVz);
+
       Float_t time = tof[i];
 
       Float_t tdiff = fabs(time-expectedTime);
@@ -170,7 +192,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 
       ht[decIndex][subLayerIndex]->Fill(time);
       het[decIndex][subLayerIndex]->Fill(expectedTime);
-      hdiff[decIndex][subLayerIndex]->Fill(tdiff);
+      hdiff[decIndex][subLayerIndex]->Fill(time-expectedTime);
 
       for(int k=0; k < nBunches; k++)
 	{
@@ -179,7 +201,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 	    hr[decIndex][subLayerIndex]->Fill(k);
 	    hdiff_digi[decIndex][subLayerIndex][k]->Fill(tdiff);
 	    if(k>0)
-	      hpt_digi[decIndex][subLayerIndex]->Fill(trkPt[i]);
+	      hpt_digi[decIndex][subLayerIndex]->Fill(trkPt[itrk]);
 	    break;
 	  }
 	}
