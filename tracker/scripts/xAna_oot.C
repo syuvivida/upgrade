@@ -6,6 +6,7 @@
 #include <TRandom.h>
 #include <TLorentzVector.h>
 #include <TFile.h>
+#include <TString.h>
 #include <cmath>
 #include "untuplizer.h"
 
@@ -31,17 +32,26 @@ void errmc(float nsig,float ntotal, float& eff, float& err ,TH1F* fHisto,int& j 
   return;
 }
 
-void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default = +-3ns
+// processType = -1 means taking all particles, = -2 means taking all but primary particles, readoutWindow default = +-3ns 
+void xAna_oot(std::string fin, int processType=-1, float readoutWindow=3){ 
 
   std::vector<string> infiles;
-
+  TString outputFileName;
   bool readOneFile=true;
   if(fin.find(".txt")!= std::string::npos)
-    readOneFile=false;
+    {
+      readOneFile=false;
+      TString endfix=gSystem->GetFromPipe(Form("file=%s; test=${file##*/}; echo \"${test%%.txt*}\"",fin.data()));
+      outputFileName = Form("histo_oot_%s_%d_timeW%02i.root",endfix.Data(),processType,(int)readoutWindow);
+      cout << "Output file = " << outputFileName << endl;
+    }
   
   if(readOneFile)
     {
       infiles.push_back(fin);
+      TString endfix=gSystem->GetFromPipe(Form("file=%s; test=${file##*/}; echo \"${test%%.root*}\"",fin.data()));
+      outputFileName = Form("histo_oot_%s_%d_timeW%02i.root",endfix.Data(),processType,(int)readoutWindow);
+      cout << "Output file = " << outputFileName << endl;
     }
   
   else{
@@ -191,8 +201,6 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
   }
 
   TreeReader data(infiles); // v5.3.12
-  Long64_t nCount=0;
-  Long64_t nCount2=0;
 
   for (Long64_t ev = 0; ev < data.GetEntriesFast(); ev++) {
     // print progress
@@ -208,7 +216,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
     Float_t* trkCharge = data.GetPtrFloat("trkCharge");
 
     Int_t* trkGenIndex = data.GetPtrInt("trkGenIndex");
-    Int_t* trkPID = data.GetPtrInt("trkPID");
+    // Int_t* trkPID = data.GetPtrInt("trkPID");
 
 
     Int_t  nHits = data.GetInt("nSimHits"); 
@@ -246,73 +254,70 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 
     for(int i=0; i < nHits; i++){
 
-      // if(proc[i]!=2)continue;
+      if(processType>=0 && proc[i]!=processType)continue; 
+      else if(processType== -2 && proc[i]==2)continue; 
 
+      // note if processType==2, a matched track could definitely be found
       int itrk=trkIndex[i];
 
-      if(itrk<0)continue;
-
-      // remove neutral particles
-      if(fabs(trkCharge[itrk])<1e-6)continue; 
+      // remove neutral particles if a matched track is found
+      if(itrk>=0 && fabs(trkCharge[itrk])<1e-6)continue; 
       
 
-      if(PID[i]== 22 || PID[i]== 12 || PID[i]== 14 || PID[i]== 16 
+      if(PID[i]== 22 || PID[i]== 12 || PID[i]== 14 || PID[i]== 16 || PID[i]==111
        	 || PID[i]== 130 || PID[i]== 310 || PID[i]== 311 || PID[i] == 2112 ||
       	 PID[i]== 3122)continue;
 
 
       int hitLayerIndex = layer[i]-1;
       int hitDiskIndex  = disk[i]-1;
-
-     // more accurate way of computation
-
-      Float_t calPz = trkPz[itrk];
-      Float_t calE  = trkE[itrk];
-      Float_t calVz = calPz/calE *299792458*1e-7;
-
-      Float_t timeZ =abs(gz[i]/calVz);
-
-
-      Float_t pathlength = sqrt(gx[i]*gx[i] +
-				gy[i]*gy[i] +
-				gz[i]*gz[i]);
-      Float_t expectedTime = pathlength/30;
-      Float_t time = tof[i];
-      Float_t tdiff = (time-expectedTime);
-      Float_t tdiff2 = (time-timeZ);
       Int_t decIndex = decID[i]-1;
-	
       int subLayerIndex = decIndex==0? hitLayerIndex: hitDiskIndex;
+      Float_t time = tof[i];
 
-      ht[decIndex][subLayerIndex]->Fill(time);
-      het[decIndex][subLayerIndex]->Fill(expectedTime);
-      het2[decIndex][subLayerIndex]->Fill(timeZ);
-      hdiff[decIndex][subLayerIndex]->Fill(tdiff);
-      hdiff2[decIndex][subLayerIndex]->Fill(tdiff2);
-      for(int k=0; k < nBunches; k++) 
-	{
-	  if(fabs(fabs(tdiff)-(Float_t)25*k)< readoutWindow){
-	    if(decIndex==0 && subLayerIndex==0)nCount++;
-	    hr[decIndex][subLayerIndex]->Fill(k);
-	    hdiff_digi[decIndex][subLayerIndex][k]->Fill(fabs(tdiff));
-	    hpt_digi[decIndex][subLayerIndex][k]->Fill(trkPt[itrk]);
-	    break;
-	  }
-   
-	}
 
+     // more accurate way of computation if a matched track is found and 
+      // a pt could be retrieved
+      if(itrk>=0){
+       Float_t calPz = trkPz[itrk];
+       Float_t calE  = trkE[itrk];
+       Float_t calVz = calPz/calE *299792458*1e-7;
+       Float_t timeZ = abs(gz[i]/calVz);
+       Float_t tdiff2 = (time-timeZ);
+
+       het2[decIndex][subLayerIndex]->Fill(timeZ);
+       hdiff2[decIndex][subLayerIndex]->Fill(tdiff2);
 
       for(int k=0; k < nBunches; k++)
           {
 	    if(fabs(fabs(tdiff2)-(Float_t)25*k)< readoutWindow){
-	      if(decIndex==0 && subLayerIndex==0)nCount2++;
 	      hr2[decIndex][subLayerIndex]->Fill(k);
 	      hdiff_digi2[decIndex][subLayerIndex][k]->Fill(fabs(tdiff2));
-	      hpt_digi2[decIndex][subLayerIndex][k]->Fill(trkPt[itrk]);
+ 	      hpt_digi2[decIndex][subLayerIndex][k]->Fill(trkPt[itrk]);
 	      break;
 	    }
 
 	  }
+
+      } // if a matched track is found
+      Float_t pathlength = sqrt(gx[i]*gx[i] +
+				gy[i]*gy[i] +
+				gz[i]*gz[i]);
+      Float_t expectedTime = pathlength/30;
+      Float_t tdiff = (time-expectedTime);
+
+      ht[decIndex][subLayerIndex]->Fill(time);
+      het[decIndex][subLayerIndex]->Fill(expectedTime);
+      hdiff[decIndex][subLayerIndex]->Fill(tdiff);
+      for(int k=0; k < nBunches; k++) 
+	{
+	  if(fabs(fabs(tdiff)-(Float_t)25*k)< readoutWindow){
+	    hr[decIndex][subLayerIndex]->Fill(k);
+	    hdiff_digi[decIndex][subLayerIndex][k]->Fill(fabs(tdiff));
+ 	    if(itrk>=0)hpt_digi[decIndex][subLayerIndex][k]->Fill(trkPt[itrk]);
+	    break;
+	  }
+	}
 
 
     } // loop over number of hits in each event
@@ -320,9 +325,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 
   } // event loop
 
-  //std::cout << "nCount = " << nCount << std::endl;
-  //std::cout << "nCount2 = " << nCount2 << std::endl;
-  TFile* outFile = new TFile(Form("histo_oot_timeW%02i.root",(int)readoutWindow),"recreate");       
+  TFile* outFile = new TFile(outputFileName.Data(),"recreate");       
 
   for(int i=0;i<2;i++){
 
