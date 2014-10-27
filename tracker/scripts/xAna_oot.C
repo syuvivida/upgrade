@@ -279,8 +279,7 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
       Float_t expectedTime = pathlength/30;
       Float_t time = tof[i];
       Float_t tdiff = (time-expectedTime);
-      // Float_t tdiff2 = (time-timeZ);
-      Float_t tdiff2 = tdiff;
+      Float_t tdiff2 = (time-timeZ);
       Int_t decIndex = decID[i]-1;
 	
       int subLayerIndex = decIndex==0? hitLayerIndex: hitDiskIndex;
