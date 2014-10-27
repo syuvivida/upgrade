@@ -105,9 +105,11 @@ class trkSimHitTree : public baseTree{
 
   std::vector<Int_t>   hitTrkIndex_;
 
+  std::vector<Int_t>   hitTrkNum_;
+
 
   Int_t nSimTrks_;
-  
+
   std::vector<Float_t> trkE_;
   std::vector<Float_t> trkPx_;
   std::vector<Float_t> trkPy_;
@@ -119,6 +121,7 @@ class trkSimHitTree : public baseTree{
 
   std::vector<Int_t>   trkPID_;
   std::vector<Int_t>   trkGenIndex_;
+  std::vector<Int_t>   trkNum_;
 
 };
 

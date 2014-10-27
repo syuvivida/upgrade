@@ -109,6 +109,8 @@ trkSimHitTree::Fill(const edm::Event& iEvent,  const edm::EventSetup& iSetup )
      trkCharge_.push_back(isimtk->charge());
      trkPID_.push_back(isimtk->type());
      trkGenIndex_.push_back(isimtk->genpartIndex());
+     
+     trkNum_.push_back(isimtk->trackId());
 
    }
 
@@ -154,7 +156,7 @@ trkSimHitTree::Fill(const edm::Event& iEvent,  const edm::EventSetup& iSetup )
      else
        hitTrkIndex_.push_back(-1);
        
-
+     hitTrkNum_.push_back(isim->trackId());
 
      Local3DPoint exit3  = isim->exitPoint();
      GlobalPoint exit3_global = theDet->surface().toGlobal(exit3);
@@ -257,9 +259,10 @@ trkSimHitTree::SetBranches(){
   AddBranch(&hitModule_,"hitModule"); 
   AddBranch(&hitTrkIndex_,"hitTrkIndex"); 
 
+  AddBranch(&hitTrkNum_,"hitTrkNum");
+
 
   AddBranch(&nSimTrks_,"nSimTrks"); 
-
 
   AddBranch(&trkE_,"trkE");
   AddBranch(&trkPx_,"trkPx");
@@ -272,6 +275,7 @@ trkSimHitTree::SetBranches(){
   AddBranch(&trkPID_,"trkPID");
 
   AddBranch(&trkGenIndex_,"trkGenIndex");
+  AddBranch(&trkNum_,"trkNum");
 
 
 }
@@ -318,6 +322,8 @@ trkSimHitTree::Clear(){
   hitModule_.clear(); 
 
   hitTrkIndex_.clear();
+  hitTrkNum_.clear();
+
 
   nSimTrks_ = 0;
 
@@ -332,6 +338,7 @@ trkSimHitTree::Clear(){
 
   trkPID_.clear();
   trkGenIndex_.clear();
+  trkNum_.clear();
 
 
 }
