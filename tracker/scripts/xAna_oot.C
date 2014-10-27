@@ -6,16 +6,28 @@
 #include <TRandom.h>
 #include <TLorentzVector.h>
 #include <TFile.h>
+#include <cmath>
 #include "untuplizer.h"
 
 using namespace std;
+void fractionClear(float & a,float & b)
+{ 
+a=-1;
+b=-1;
+}
 
-void errmc(float nsig,float ntotal, float& eff, float& err)
+void errmc(float nsig,float ntotal, float& eff, float& err ,TH1F* fHisto,int& j )
 {
-  cout << "nsig = " << nsig << " ntotal = " << ntotal << endl;
+  //cout << "nsig = " << nsig << " ntotal = " << ntotal << endl;
   if(ntotal<1e-6){eff=-1; err=-1; return;}
   eff = nsig/ntotal;
   err = sqrt( (1-eff)*eff/ntotal);
+  if(eff>1e-6 && err>1e-6)
+    {
+     fHisto->SetBinContent(j+1,eff);
+     fHisto->SetBinError(j+1,err);
+    }
+  fractionClear(eff,err);
   return;
 }
 
@@ -54,32 +66,63 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
   std::string title[2]={"Barrel","Endcap"};
   std::string subtitle[2]={"Layer","Disk"};
 
+  std::string titletrk[2]={"|#eta| < 1.0", "|#eta| > 1.0"};
+  std::string subtitletrk[2]={"primary", "secondary"};
+
   const int nBunches = 20;
   const int nLayers[2] = {10,15};
   TH1F* hoot[2];
   TH1F* hoot_digi[2];
   TH1F* hoot_digi_oot[2];
+  TH1F* hoot2[2];
+  TH1F* hoot_digi2[2];
+  TH1F* hoot_digi_oot2[2];
 
   for(int k=0; k<2; k++)
     {
       hoot[k] = new TH1F(Form("hoot_%s",title[k].data()),Form("Fraction of Hits Not Digitized In-Time Relative to All Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
       hoot_digi[k] = new TH1F(Form("hoot_digi_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All Digitized Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
       hoot_digi_oot[k] = new TH1F(Form("hoot_digi_oot_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All Hits Not Digitized In-Time in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
+      hoot2[k] = new TH1F(Form("hoot2_%s",title[k].data()),Form("Fraction of Hits Not Digitized In-Time Relative to All Hits in %s 2",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
+      hoot_digi2[k] = new TH1F(Form("hoot2_digi_%s ",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All Digitized Hits in %s 2",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
+      hoot_digi_oot2[k] = new TH1F(Form("hoot2_digi_oot_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All Hits Not Digitized In-Time in %s 2",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
       
     }
 
   TH1I* htof_diff= new TH1I("htof_diff","", 400,-10,10);
+
   TH1I* htof     = new TH1I("htof","", 500,0, 500);
   TH1I* hetof    = new TH1I("hetof","", 100,0, 20);
   TH1I* hread    = new TH1I("hread","",nBunches,0,(float)(nBunches));
+
   TH1I* ht[2][15];
   TH1I* hdiff[2][15];
+  TH1I* hdiff2[2][15];
   TH1I* het[2][15];
-  TH1I* hr[2][15];
+  TH1I* het2[2][15];
+  TH1I* hr[2][15]; 
+  TH1I* hr2[2][15];
   TH1I* hdiff_digi[2][15][nBunches];
-  TH1I* hpt_digi[2][15];
+  TH1I* hdiff_digi2[2][15][nBunches];
+  TH1I* hpt_digi[2][15][nBunches];
+  TH1I* hpt_digi2[2][15][nBunches];
+
+  TH1I* htrkpt[2][2]; // [0]: |eta| < 1.0, [1]: |eta| > 1.0
+  TH1I* htrketa[2][2];
 
   for(int k=0;k<2; k++){
+
+    for(int ik=0; ik<2; ik++){
+      htrkpt[k][ik] = (TH1I*)hetof->Clone(Form("htrkpt%d_%s",k,subtitletrk[ik].data()));
+      htrkpt[k][ik]->SetXTitle("Track p_{T} [GeV]");
+      htrkpt[k][ik]->SetTitle(Form("%s, %s particles",titletrk[k].data(),subtitletrk[ik].data()));
+
+      htrketa[k][ik] = (TH1I*)htof_diff->Clone(Form("htrketa%d_%s",k,subtitletrk[ik].data()));
+      htrketa[k][ik]->SetXTitle("Track #eta");
+      htrketa[k][ik]->SetTitle(Form("%s, %s particles",titletrk[k].data(),subtitletrk[ik].data()));
+      
+    }
+
     for(int i=0;i<15;i++){
 
      
@@ -92,21 +135,29 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
       hdiff[k][i]->SetXTitle("Difference of TOF from expectation: ns");
       hdiff[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 				 subtitle[k].data(),i+1));
+      hdiff2[k][i]=(TH1I*)htof_diff->Clone(Form("hdiff2%d%02i",k,i));
+      hdiff2[k][i]->SetXTitle("Difference of TOF from expectation 2: ns");
+      hdiff2[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
+				 subtitle[k].data(),i+1));
 
       het[k][i]=(TH1I*)hetof->Clone(Form("het%d%02i",k,i));
       het[k][i]->SetXTitle("Expected time of flight: ns");
       het[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
+			       subtitle[k].data(),i+1));
+      het2[k][i]=(TH1I*)hetof->Clone(Form("het2%d%02i",k,i));
+      het2[k][i]->SetXTitle("Expected time of flight 2: ns");
+      het2[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 			       subtitle[k].data(),i+1));
 
       hr[k][i]=(TH1I*)hread->Clone(Form("hr%d%02i",k,i));
       hr[k][i]->SetXTitle("Number of bunch crossings");
       hr[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 			      subtitle[k].data(),i+1));
+      hr2[k][i]=(TH1I*)hread->Clone(Form("hr2%d%02i",k,i));
+      hr2[k][i]->SetXTitle("Number of bunch crossings 2");
+      hr2[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
+			      subtitle[k].data(),i+1));
 
-      hpt_digi[k][i]=(TH1I*)hetof->Clone(Form("hpt_digi%d%02i",k,i));
-      hpt_digi[k][i]->SetXTitle("p_{T} of corresponding tracks of Digitized OOT Hits");
-      hpt_digi[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
-				    subtitle[k].data(),i+1));
 
      for(int b=0; b< nBunches; b++){
 
@@ -114,6 +165,26 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 	hdiff_digi[k][i][b]->SetXTitle("Difference of TOF from expectation: ns");
 	hdiff_digi[k][i][b]->SetTitle(Form("%s, %s %d in bunch %d",title[k].data(),
 					   subtitle[k].data(),i+1,b));
+
+
+        hdiff_digi2[k][i][b]=(TH1I*)htof->Clone(Form("hdiff2_digi_%d%02i_%02i",k,i,b));
+	hdiff_digi2[k][i][b]->SetXTitle("Difference of TOF from expectation: ns");
+	hdiff_digi2[k][i][b]->SetTitle(Form("%s, %s %d in bunch %d",title[k].data(),
+					   subtitle[k].data(),i+1,b));
+
+	
+	hpt_digi[k][i][b]=(TH1I*)hetof->Clone(Form("hpt_digi%d%02i_%02i",k,i,b));
+	hpt_digi[k][i][b]->SetXTitle("p_{T} of corresponding tracks of Digitized OOT Hits");
+	hpt_digi[k][i][b]->SetTitle(Form("%s, %s %d in bunch %d",title[k].data(),
+					 subtitle[k].data(),i+1,b));
+
+	
+	hpt_digi2[k][i][b]=(TH1I*)hetof->Clone(Form("hpt2_digi%d%02i_%02i",k,i,b));
+	hpt_digi2[k][i][b]->SetXTitle("p_{T} of corresponding tracks of Digitized OOT Hits");
+	hpt_digi2[k][i][b]->SetTitle(Form("%s, %s %d in bunch %d",title[k].data(),
+					 subtitle[k].data(),i+1,b));
+	
+
       }
       
     }
@@ -121,16 +192,29 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
 
   TreeReader data(infiles); // v5.3.12
   Long64_t nCount=0;
+  Long64_t nCount2=0;
 
   for (Long64_t ev = 0; ev < data.GetEntriesFast(); ev++) {
     // print progress
     if (ev % 50000 == 0)
       fprintf(stderr, "Processing event %lli of %lli\n", ev + 1, data.GetEntriesFast());
     data.GetEntry(ev);
+    
+    Int_t  nTrks = data.GetInt("nSimTrks");
+    Float_t* trkPt  = data.GetPtrFloat("trkPt");
+    Float_t* trkPz  = data.GetPtrFloat("trkPz");
+    Float_t* trkE   = data.GetPtrFloat("trkE");
+    Float_t* trkEta = data.GetPtrFloat("trkEta");
+    Float_t* trkCharge = data.GetPtrFloat("trkCharge");
 
-    Int_t  nHits = data.GetInt("nSimHits");
+    Int_t* trkGenIndex = data.GetPtrInt("trkGenIndex");
+    Int_t* trkPID = data.GetPtrInt("trkPID");
+
+
+    Int_t  nHits = data.GetInt("nSimHits"); 
     Int_t* decID = data.GetPtrInt("hitSubDec");
     Int_t* PID   = data.GetPtrInt("hitPID");
+
     Int_t* proc  = data.GetPtrInt("hitProcessType");
     Int_t* layer = data.GetPtrInt("hitLayer");
     Int_t* disk  = data.GetPtrInt("hitDisk");
@@ -141,139 +225,169 @@ void xAna_oot(std::string fin, float readoutWindow=3){ // readoutWindow default 
     Float_t* gx    = data.GetPtrFloat("hitGlobalX");
     Float_t* gy    = data.GetPtrFloat("hitGlobalY");
     Float_t* gz    = data.GetPtrFloat("hitGlobalZ");
-    Int_t* trkIndex = data.GetPtrInt("hitTrkIndex");
-    Float_t* trkPt  = data.GetPtrFloat("trkPt");
-    Float_t* trkPz  = data.GetPtrFloat("trkPz");
-    Float_t* trkE   = data.GetPtrFloat("trkE");
-    Float_t* trkCharge = data.GetPtrFloat("trkCharge");
 
-    Int_t* trkGenIndex = data.GetPtrInt("trkGenIndex");
-    Int_t* trkPID = data.GetPtrInt("trkPID");
+    Int_t* trkIndex = data.GetPtrInt("hitTrkIndex");
  
+
+
+    for(int j=0; j < nTrks; j++){
+
+      if(fabs(trkCharge[j])<1e-6)continue; 
+      Float_t eta = trkEta[j];
+      Float_t pt  = trkPt[j];
+
+      Int_t dec = fabs(eta)<1.0? 0: 1;
+      Int_t type = trkGenIndex[j]<0? 1:0;
+
+      htrkpt[dec][type]->Fill(pt);
+      htrketa[dec][type]->Fill(eta);
+
+    }
+
     for(int i=0; i < nHits; i++){
 
+      // if(proc[i]!=2)continue;
 
-      Int_t itrk = trkIndex[i];
-
-      if(proc[i]!=2)continue;
+      int itrk=trkIndex[i];
 
       if(itrk<0)continue;
 
       // remove neutral particles
       if(fabs(trkCharge[itrk])<1e-6)continue; 
       
+
       if(PID[i]== 22 || PID[i]== 12 || PID[i]== 14 || PID[i]== 16 
        	 || PID[i]== 130 || PID[i]== 310 || PID[i]== 311 || PID[i] == 2112 ||
       	 PID[i]== 3122)continue;
 
+
       int hitLayerIndex = layer[i]-1;
       int hitDiskIndex  = disk[i]-1;
 
-      Float_t pathlength = sqrt(gx[i]*gx[i] +
-				gy[i]*gy[i] +
-				gz[i]*gz[i]);
-      Float_t expectedTime = pathlength/30;
-
-      // more accurate way of computation
+     // more accurate way of computation
 
       Float_t calPz = trkPz[itrk];
       Float_t calE  = trkE[itrk];
       Float_t calVz = calPz/calE *299792458*1e-7;
 
-      Float_t expectedTimeZ =abs(gz[i]/calVz);
+      Float_t timeZ =abs(gz[i]/calVz);
 
+
+      Float_t pathlength = sqrt(gx[i]*gx[i] +
+				gy[i]*gy[i] +
+				gz[i]*gz[i]);
+      Float_t expectedTime = pathlength/30;
       Float_t time = tof[i];
-
-      Float_t tdiff = fabs(time-expectedTime);
-
+      Float_t tdiff = (time-expectedTime);
+      // Float_t tdiff2 = (time-timeZ);
+      Float_t tdiff2 = tdiff;
       Int_t decIndex = decID[i]-1;
 	
       int subLayerIndex = decIndex==0? hitLayerIndex: hitDiskIndex;
 
       ht[decIndex][subLayerIndex]->Fill(time);
       het[decIndex][subLayerIndex]->Fill(expectedTime);
-      hdiff[decIndex][subLayerIndex]->Fill(time-expectedTime);
-
-      for(int k=0; k < nBunches; k++)
+      het2[decIndex][subLayerIndex]->Fill(timeZ);
+      hdiff[decIndex][subLayerIndex]->Fill(tdiff);
+      hdiff2[decIndex][subLayerIndex]->Fill(tdiff2);
+      for(int k=0; k < nBunches; k++) 
 	{
-	  if(fabs(tdiff-(Float_t)25*k)< readoutWindow){
+	  if(fabs(fabs(tdiff)-(Float_t)25*k)< readoutWindow){
 	    if(decIndex==0 && subLayerIndex==0)nCount++;
 	    hr[decIndex][subLayerIndex]->Fill(k);
-	    hdiff_digi[decIndex][subLayerIndex][k]->Fill(tdiff);
-	    if(k>0)
-	      hpt_digi[decIndex][subLayerIndex]->Fill(trkPt[itrk]);
+	    hdiff_digi[decIndex][subLayerIndex][k]->Fill(fabs(tdiff));
+	    hpt_digi[decIndex][subLayerIndex][k]->Fill(trkPt[itrk]);
 	    break;
 	  }
+   
 	}
 
 
-      
+      for(int k=0; k < nBunches; k++)
+          {
+	    if(fabs(fabs(tdiff2)-(Float_t)25*k)< readoutWindow){
+	      if(decIndex==0 && subLayerIndex==0)nCount2++;
+	      hr2[decIndex][subLayerIndex]->Fill(k);
+	      hdiff_digi2[decIndex][subLayerIndex][k]->Fill(fabs(tdiff2));
+	      hpt_digi2[decIndex][subLayerIndex][k]->Fill(trkPt[itrk]);
+	      break;
+	    }
+
+	  }
+
+
     } // loop over number of hits in each event
     
-      
+
   } // event loop
 
-  std::cout << "nCount = " << nCount << std::endl;
-  std::string outfileName = Form("histo_oot_%d.root",(int)readoutWindow);
-  TFile* outFile = new TFile(outfileName.data(),"recreate");       
+  //std::cout << "nCount = " << nCount << std::endl;
+  //std::cout << "nCount2 = " << nCount2 << std::endl;
+  TFile* outFile = new TFile(Form("histo_oot_timeW%02i.root",(int)readoutWindow),"recreate");       
 
   for(int i=0;i<2;i++){
+
+    for(int ik=0; ik<2; ik++){
+      htrkpt[i][ik]->Write();
+      htrketa[i][ik]->Write();
+    }
+
     for(int j=0; j<nLayers[i] ;j++)
       {
 	ht[i][j]->Write();
 	hdiff[i][j]->Write();
+        hdiff2[i][j]->Write();
 	het[i][j]->Write();
+        het2[i][j]->Write();
 	hr[i][j]->Write();
-	hpt_digi[i][j]->Write();
-	for(int b=0; b< nBunches; b++)
+	hr2[i][j]->Write();
+	for(int b=0; b< nBunches; b++){
 	  hdiff_digi[i][j][b]->Write();
+          hdiff_digi2[i][j][b]->Write();
+	  hpt_digi[i][j][b]->Write();
+	  hpt_digi2[i][j][b]->Write();
 
+         }
 	// compute the fraction of OOT Hits in various ways
 
 	// number of hits not digitized in the first bounch crossing
 	Long64_t nOOT = hdiff[i][j]->GetEntries()-hr[i][j]->GetBinContent(1);
+	Long64_t nOOT2 = hdiff2[i][j]->GetEntries()-hr2[i][j]->GetBinContent(1);
 
 	float fraction=-1;
 	float fraction_err=-1;
 	errmc(nOOT,
 	      hdiff[i][j]->GetEntries(),
-	      fraction, fraction_err);
-	if(fraction>1e-6 && fraction_err>1e-6){
-	  hoot[i]->SetBinContent(j+1,fraction);
-	  hoot[i]->SetBinError(j+1,fraction_err);
-	}
-
-	fraction=-1;
-	fraction_err=-1;	
+	      fraction, fraction_err,hoot[i],j);
+        errmc(nOOT2,
+	      hdiff2[i][j]->GetEntries(),
+	      fraction, fraction_err,hoot2[i],j);
+	
 	int nBins = hr[i][j]->GetNbinsX();
 	errmc(hr[i][j]->Integral(2,nBins+1),
 	      hr[i][j]->GetEntries(),
-	      fraction, fraction_err);  
-	if(fraction>1e-6 && fraction_err>1e-6){
-	  hoot_digi[i]->SetBinContent(j+1,fraction);
-	  hoot_digi[i]->SetBinError(j+1,fraction_err);
-	}
-
-
-	fraction=-1;
-	fraction_err=-1;	
+	      fraction, fraction_err, hoot_digi[i],j);  
+        errmc(hr2[i][j]->Integral(2,nBins+1),
+	      hr2[i][j]->GetEntries(),
+	      fraction, fraction_err, hoot_digi2[i],j);  	
 
 	errmc(hr[i][j]->Integral(2,nBins+1),
 	      nOOT,
-	      fraction, fraction_err);  
-	if(fraction>1e-6 && fraction_err>1e-6){
-	  hoot_digi_oot[i]->SetBinContent(j+1,fraction);
-	  hoot_digi_oot[i]->SetBinError(j+1,fraction_err);
-	}
-
+	      fraction, fraction_err, hoot_digi_oot[i],j);  
+        errmc(hr2[i][j]->Integral(2,nBins+1),
+	      nOOT2,
+	      fraction, fraction_err, hoot_digi_oot2[i],j);  
 
       }// end of loop over layers
-
-    hoot[i]->Write();
-    hoot_digi[i]->Write();
-    hoot_digi_oot[i]->Write();
   }
 
-  
+ for(int i=0;i<2;i++){
+    hoot[i]->Write();
+    hoot2[i]->Write();
+    hoot_digi[i]->Write();
+    hoot_digi2[i]->Write();
+    hoot_digi_oot[i]->Write();
+    hoot_digi_oot2[i]->Write();
+ }
   outFile->Close();
 }
