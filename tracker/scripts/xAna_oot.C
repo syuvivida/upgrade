@@ -141,11 +141,11 @@ void xAna_oot(std::string fin, int processType=-1, float readoutWindow=3){
       ht[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 			      subtitle[k].data(),i+1));
 
-      hdiff[k][i]=(TH1I*)htof_diff->Clone(Form("hdiff%d%02i",k,i));
+      hdiff[k][i]=(TH1I*)htof->Clone(Form("hdiff%d%02i",k,i));
       hdiff[k][i]->SetXTitle("Difference of TOF from expectation: ns");
       hdiff[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 				 subtitle[k].data(),i+1));
-      hdiff2[k][i]=(TH1I*)htof_diff->Clone(Form("hdiff2%d%02i",k,i));
+      hdiff2[k][i]=(TH1I*)htof->Clone(Form("hdiff2%d%02i",k,i));
       hdiff2[k][i]->SetXTitle("Difference of TOF from expectation 2: ns");
       hdiff2[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 				 subtitle[k].data(),i+1));
