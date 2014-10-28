@@ -17,13 +17,3 @@ root://eoscms//eos/cms/store/user/syu/MinBias_TuneZ2star_14TeV-pythia6/crab_MINB
 root://eoscms//eos/cms/store/user/syu/MinBias_TuneZ2star_14TeV-pythia6/crab_MINBIAS/141027_114956/0000/minbias_24.root
 root://eoscms//eos/cms/store/user/syu/MinBias_TuneZ2star_14TeV-pythia6/crab_MINBIAS/141027_114956/0000/minbias_25.root
 root://eoscms//eos/cms/store/user/syu/MinBias_TuneZ2star_14TeV-pythia6/crab_MINBIAS/141027_114956/0000/minbias_26.root
-root://eoscms//eos/cms/store/user/syu/MinBias_TuneZ2star_14TeV-pythia6/crab_MINBIAS/141027_114956/0000/minbias_27.root
-root://eoscms//eos/cms/store/user/syu/MinBias_TuneZ2star_14TeV-pythia6/crab_MINBIAS/141027_114956/0000/minbias_28.root
-root://eoscms//eos/cms/store/user/syu/MinBias_TuneZ2star_14TeV-pythia6/crab_MINBIAS/141027_114956/0000/minbias_29.root
-root://eoscms//eos/cms/store/user/syu/MinBias_TuneZ2star_14TeV-pythia6/crab_MINBIAS/141027_114956/0000/minbias_3.root
-root://eoscms//eos/cms/store/user/syu/MinBias_TuneZ2star_14TeV-pythia6/crab_MINBIAS/141027_114956/0000/minbias_30.root
-root://eoscms//eos/cms/store/user/syu/MinBias_TuneZ2star_14TeV-pythia6/crab_MINBIAS/141027_114956/0000/minbias_31.root
-root://eoscms//eos/cms/store/user/syu/MinBias_TuneZ2star_14TeV-pythia6/crab_MINBIAS/141027_114956/0000/minbias_32.root
-root://eoscms//eos/cms/store/user/syu/MinBias_TuneZ2star_14TeV-pythia6/crab_MINBIAS/141027_114956/0000/minbias_34.root
-root://eoscms//eos/cms/store/user/syu/MinBias_TuneZ2star_14TeV-pythia6/crab_MINBIAS/141027_114956/0000/minbias_35.root
-root://eoscms//eos/cms/store/user/syu/MinBias_TuneZ2star_14TeV-pythia6/crab_MINBIAS/141027_114956/0000/minbias_36.root
