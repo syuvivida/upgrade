@@ -286,7 +286,7 @@ void xAna_oot(std::string fin, int processType=-1, float readoutWindow=3){
        Float_t tdiff2 = (time-timeZ);
 
        het2[decIndex][subLayerIndex]->Fill(timeZ);
-       hdiff2[decIndex][subLayerIndex]->Fill(tdiff2);
+       hdiff2[decIndex][subLayerIndex]->Fill(fabs(tdiff2));
 
       for(int k=0; k < nBunches; k++)
           {
@@ -308,7 +308,7 @@ void xAna_oot(std::string fin, int processType=-1, float readoutWindow=3){
 
       ht[decIndex][subLayerIndex]->Fill(time);
       het[decIndex][subLayerIndex]->Fill(expectedTime);
-      hdiff[decIndex][subLayerIndex]->Fill(tdiff);
+      hdiff[decIndex][subLayerIndex]->Fill(fabs(tdiff));
       for(int k=0; k < nBunches; k++) 
 	{
 	  if(fabs(fabs(tdiff)-(Float_t)25*k)< readoutWindow){
