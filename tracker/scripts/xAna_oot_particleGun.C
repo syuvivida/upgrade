@@ -369,9 +369,9 @@ void xAna_oot_particleGun(std::string fin, int processType=-1, float readoutWind
 
 
       } // if a matched track is found
-      Float_t pathlength = sqrt(pow(gx[i]-primvx,2) +
-				pow(gy[i]-primvy,2) +
-				pow(gz[i]-primvz,2));
+      Float_t pathlength = sqrt(pow(gx[i],2) +
+				pow(gy[i],2) +
+				pow(gz[i],2));
       Float_t expectedTime = pathlength/30;
       Float_t tdiff = (time-expectedTime);
 
