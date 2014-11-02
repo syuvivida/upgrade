@@ -95,10 +95,8 @@ trkSimHitTree::Fill(const edm::Event& iEvent,  const edm::EventSetup& iSetup )
    for (std::vector<SimTrack>::iterator isimtk = theSimTracks.begin();
     	isimtk != theSimTracks.end(); ++isimtk){
      trkMaps.insert(std::pair<unsigned int,unsigned int>(isimtk->trackId(), nSimTrks_));
-
-
+     
      nSimTrks_++;
-
      trkPhi_.push_back(isimtk->momentum().Phi());
      trkEta_.push_back(isimtk->momentum().Eta());
      trkPx_.push_back(isimtk->momentum().Px());
@@ -108,12 +106,21 @@ trkSimHitTree::Fill(const edm::Event& iEvent,  const edm::EventSetup& iSetup )
      trkE_.push_back(isimtk->momentum().E());
      trkCharge_.push_back(isimtk->charge());
      trkPID_.push_back(isimtk->type());
-     trkGenIndex_.push_back(isimtk->genpartIndex());
-     
+     trkGenIndex_.push_back(isimtk->genpartIndex());     
      trkNum_.push_back(isimtk->trackId());
+     trkVtxIndex_.push_back(isimtk->vertIndex());
 
    }
 
+   
+   for (std::vector<SimVertex>::iterator isimvtx = theSimVertexes.begin();
+	isimvtx != theSimVertexes.end(); ++isimvtx)
+     {
+       vtxX_.push_back(isimvtx->position().x());
+       vtxY_.push_back(isimvtx->position().y());
+       vtxZ_.push_back(isimvtx->position().z());
+       nSimVtxs_++;
+     }
 
 
    for (std::vector<PSimHit>::iterator isim = theTrackerHits.begin();
@@ -276,6 +283,12 @@ trkSimHitTree::SetBranches(){
 
   AddBranch(&trkGenIndex_,"trkGenIndex");
   AddBranch(&trkNum_,"trkNum");
+  AddBranch(&trkVtxIndex_,"trkVtxIndex");
+
+  AddBranch(&nSimVtxs_,"nSimVtxs");
+  AddBranch(&vtxX_,"vtxX");
+  AddBranch(&vtxY_,"vtxY");
+  AddBranch(&vtxZ_,"vtxZ");
 
 
 }
@@ -339,6 +352,12 @@ trkSimHitTree::Clear(){
   trkPID_.clear();
   trkGenIndex_.clear();
   trkNum_.clear();
+  trkVtxIndex_.clear();
+
+  nSimVtxs_ = 0;
+  vtxX_.clear();
+  vtxY_.clear();
+  vtxZ_.clear();
 
 
 }
