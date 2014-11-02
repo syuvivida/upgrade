@@ -136,7 +136,7 @@ void xAna_oot_particleGun(std::string fin, int processType=-1, float readoutWind
     for(int i=0;i<15;i++){
 
      
-      ht[k][i]=(TH1I*)htof->Clone(Form("ht%d%02i",k,i));
+      ht[k][i]=(TH1I*)hetof->Clone(Form("ht%d%02i",k,i));
       ht[k][i]->SetXTitle("Simulated time of flight: ns");
       ht[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 			      subtitle[k].data(),i+1));
