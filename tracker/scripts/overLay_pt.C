@@ -15,7 +15,7 @@ const int nBunches=20;
 void overLay_pt(std::string fin)
 {
   
-  TString endfix=gSystem->GetFromPipe(Form("file=%s; test=${file##*histo_oot_}; echo \"${test%%_timeW03.root*}\"",fin.data()));
+  TString endfix=gSystem->GetFromPipe(Form("file=%s; test=${file##*histo_oot_charged_}; echo \"${test%%_timeW03.root*}\"",fin.data()));
   std::string filename = Form("pt_%s_5bunches.pdf",endfix.Data());
   cout << "Output file = " << filename << endl;
 
@@ -66,7 +66,12 @@ void overLay_pt(std::string fin)
 	leg->AddEntry(hpt_oot[ib],Form("OOT Digitized in BX %d",ib+1));
       leg->Draw("same");
       if(count==0)
- 	c1->Print(Form("fig/%s(",filename.data()));
+	{
+	  c1->Print(Form("fig/%s(",filename.data()));
+	  c1->Print("fig/example_pt.pdf");
+	  c1->Print("fig/example_pt.eps");
+	  c1->Print("fig/example_pt.fig");
+	}
       else if(i==1 && k== nLayers[i]-1)
  	c1->Print(Form("fig/%s)",filename.data()));
       else
