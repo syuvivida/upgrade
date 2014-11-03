@@ -114,6 +114,11 @@ void xAna_oot(std::string fin, int processType=-1, float readoutWindow=3){
   TH1I* htof     = new TH1I("htof","", 500,0, 500);
   TH1I* hetof    = new TH1I("hetof","", 100,0, 20);
   TH1I* hread    = new TH1I("hread","",nBunches,0,(float)(nBunches));
+  
+  TH1I* htype    = new TH1I("htype","",3,0.5,3.5);
+  TH1I* halltype[2][15];
+  TH1I* hoottype[2][15];
+  TH1I* hdigitype[2][15];
 
   TH1I* ht[2][15];
   TH1I* hdiff[2][15];
@@ -152,6 +157,18 @@ void xAna_oot(std::string fin, int processType=-1, float readoutWindow=3){
     }
 
     for(int i=0;i<15;i++){
+
+      halltype[k][i]= (TH1I*)htype->Clone(Form("halltype%d%02i",k,i));
+      halltype[k][i]-> SetTitle(Form("%s, %s %d",title[k].data(),
+				    subtitle[k].data(),i+1));
+      
+      hoottype[k][i]= (TH1I*)htype->Clone(Form("hoottype%d%02i",k,i));
+      hoottype[k][i]-> SetTitle(Form("%s, %s %d",title[k].data(),
+				    subtitle[k].data(),i+1));
+
+      hdigitype[k][i]= (TH1I*)htype->Clone(Form("hdigitype%d%02i",k,i));
+      hdigitype[k][i]-> SetTitle(Form("%s, %s %d",title[k].data(),
+				    subtitle[k].data(),i+1));
 
      
       ht[k][i]=(TH1I*)hetof->Clone(Form("ht%d%02i",k,i));
@@ -397,14 +414,38 @@ void xAna_oot(std::string fin, int processType=-1, float readoutWindow=3){
 
       hdebug[decIndex][subLayerIndex]->Fill(tdiff);
 
+      halltype[decIndex][subLayerIndex]->Fill(1);
+      if(proc[i]==2)halltype[decIndex][subLayerIndex]->Fill(2);
+      else
+	halltype[decIndex][subLayerIndex]->Fill(3);
+	
+
       for(int k=0; k < nBunches; k++) 
 	{
 	  if(fabs(tdiff-(Float_t)25*k)< readoutWindow){
 	    hr[decIndex][subLayerIndex]->Fill(k);
 	    hdiff_digi[decIndex][subLayerIndex][k]->Fill(fabs(tdiff));
  	    if(itrk>=0)hpt_digi[decIndex][subLayerIndex][k]->Fill(trkPt[itrk]);
+
+	    if(k!=0)
+	      {
+	      
+		hdigitype[decIndex][subLayerIndex]->Fill(1);
+		if(proc[i]==2)hdigitype[decIndex][subLayerIndex]->Fill(2);
+		else
+		  hdigitype[decIndex][subLayerIndex]->Fill(3);
+	      }
+	    
 	    break;
 	  }
+	  else if(k==0)
+	    {
+	      
+	      hoottype[decIndex][subLayerIndex]->Fill(1);
+	      if(proc[i]==2)hoottype[decIndex][subLayerIndex]->Fill(2);
+	      else
+		hoottype[decIndex][subLayerIndex]->Fill(3);
+	    }
 	}
 
 
@@ -429,6 +470,10 @@ void xAna_oot(std::string fin, int processType=-1, float readoutWindow=3){
 	hdiff[i][j]->Write();
         hdiff2[i][j]->Write();
         hdiff3[i][j]->Write();
+
+	halltype[i][j]->Write();
+	hoottype[i][j]->Write();
+	hdigitype[i][j]->Write();
 
 	hdebug[i][j]->Write();
         hdebug2[i][j]->Write();
