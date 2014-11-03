@@ -33,8 +33,10 @@ void plot(std::string histoName, std::string xtitle)
 
   std::string tempName[2];
   tempName[0]=histoName;
-  TString endfix2=gSystem->GetFromPipe(Form("file=%s; echo \"${file##*hoot}\"",histoName.data()));
-  tempName[1]=Form("hoot2%s",endfix2.Data());
+  // TString endfix2=gSystem->GetFromPipe(Form("file=%s; echo \"${file##*hoot}\"",histoName.data()));
+  TString endfix2=gSystem->GetFromPipe(Form("file=%s; echo \"${file##*hdigi}\"",histoName.data()));
+  // tempName[1]=Form("hoot2%s",endfix2.Data());
+  tempName[1]=Form("hdigi2%s",endfix2.Data());
   cout << tempName[1] << endl;
   for(int i=0; i< 2; i++){
 
@@ -71,25 +73,31 @@ void overLay_oot(std::string fin){
   gStyle->SetOptStat(0);
 
   c1->cd();
-  
-  plot("hoot_Barrel","Layer");
+
+  plot("hdigi_Barrel","Layer");
   c1->Print(Form("%s(",filename.data()));
-
-  plot("hoot_digi_Barrel","Layer");
-  c1->Print(filename.data());
-
-  plot("hoot_digi_oot_Barrel","Layer");
-  c1->Print(filename.data());
-
-
-  plot("hoot_Endcap","Disk");
-  c1->Print(filename.data());
-
-  plot("hoot_digi_Endcap","Disk");
-  c1->Print(filename.data());
-
-  plot("hoot_digi_oot_Endcap","Disk");
+  plot("hdigi_Endcap","Disk");
   c1->Print(Form("%s)",filename.data()));
+  
+  // plot("hoot_Barrel","Layer");
+  // c1->Print(Form("%s(",filename.data()));
+
+  // plot("hoot_digi_Barrel","Layer");
+  // c1->Print(filename.data());
+
+
+  // plot("hoot_digi_oot_Barrel","Layer");
+  // c1->Print(filename.data());
+
+
+  // plot("hoot_Endcap","Disk");
+  // c1->Print(filename.data());
+
+  // plot("hoot_digi_Endcap","Disk");
+  // c1->Print(filename.data());
+
+  // plot("hoot_digi_oot_Endcap","Disk");
+  // c1->Print(Form("%s)",filename.data()));
   
   
 

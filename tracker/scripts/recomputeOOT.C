@@ -53,6 +53,17 @@ void computeDigi(TH1I* hinput, TH1F* houtput, Long64_t nOOT, int bin)
 
 }
 
+void computeOOTDigi(TH1I* hinput1, TH1I* hinput2, TH1F* houtput,int bin)
+{
+  float fraction=-1;
+  float fraction_err=-1;
+
+  errmc(hinput1->Integral(2,21),
+	hinput2->GetEntries(),
+	fraction, fraction_err,houtput,bin);
+
+}
+
 
 void recomputeOOT(std::string fin)
 {
@@ -68,22 +79,28 @@ void recomputeOOT(std::string fin)
   TFile* f  = new TFile(fin.data());
   TH1F* hoot[2];
   TH1F* hoot_digi_oot[2];
+  TH1F* hdigi[2];
 
   TH1F* hoot2[2];
   TH1F* hoot_digi_oot2[2];
+  TH1F* hdigi2[2];
 
   TH1F* hoot3[2];
   TH1F* hoot_digi_oot3[2];
+  TH1F* hdigi3[2];
 
   for(int k=0; k<2; k++)
     {
       hoot[k] = new TH1F(Form("hoot_%s",title[k].data()),Form("Fraction of Hits Not Digitized In-Time Relative to All Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
       hoot_digi_oot[k] = new TH1F(Form("hoot_digi_oot_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All Hits Not Digitized In-Time in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
+      hdigi[k] = new TH1F(Form("hdigi_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
       hoot2[k] = new TH1F(Form("hoot2_%s",title[k].data()),Form("Fraction of Hits Not Digitized In-Time Relative to All Hits in %s 2",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
       hoot_digi_oot2[k] = new TH1F(Form("hoot2_digi_oot_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All Hits Not Digitized In-Time in %s 2",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
+      hdigi2[k] = new TH1F(Form("hdigi2_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
 
       hoot3[k] = new TH1F(Form("hoot3_%s",title[k].data()),Form("Fraction of Hits Not Digitized In-Time Relative to All Hits in %s 3",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
       hoot_digi_oot3[k] = new TH1F(Form("hoot3_digi_oot_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All Hits Not Digitized In-Time in %s 3",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
+      hdigi3[k] = new TH1F(Form("hdigi3_%s",title[k].data()),Form("Fraction of Digitized OOT Hits Relative to All Hits in %s",title[k].data()),nLayers[k],0.5,(float)(nLayers[k]+0.5));
       
     }
 
@@ -93,21 +110,28 @@ void recomputeOOT(std::string fin)
       {
 	TH1I* hdiff=(TH1I*)f->FindObjectAny(Form("hdiff%d%02i",i,j));
 	Long64_t nOOT  = computeNOOT(hdiff,hoot[i],j);
-
-	hdiff=(TH1I*)f->FindObjectAny(Form("hdiff2%d%02i",i,j));
-	Long64_t nOOT2 = computeNOOT(hdiff,hoot2[i],j);
-
-	hdiff=(TH1I*)f->FindObjectAny(Form("hdiff3%d%02i",i,j));
-	Long64_t nOOT3 = computeNOOT(hdiff,hoot3[i],j);
-
 	TH1I* hr=(TH1I*)f->FindObjectAny(Form("hr%d%02i",i,j));
 	computeDigi(hr,hoot_digi_oot[i],nOOT,j);
 
+	computeOOTDigi(hr,hdiff,hdigi[i],j);
+
+	hdiff=(TH1I*)f->FindObjectAny(Form("hdiff2%d%02i",i,j));
+	Long64_t nOOT2 = computeNOOT(hdiff,hoot2[i],j);
 	hr=(TH1I*)f->FindObjectAny(Form("hr2%d%02i",i,j));
 	computeDigi(hr,hoot_digi_oot2[i],nOOT2,j);
 
+	computeOOTDigi(hr,hdiff,hdigi2[i],j);
+
+
+	hdiff=(TH1I*)f->FindObjectAny(Form("hdiff3%d%02i",i,j));
+	Long64_t nOOT3 = computeNOOT(hdiff,hoot3[i],j);
 	hr=(TH1I*)f->FindObjectAny(Form("hr3%d%02i",i,j));
 	computeDigi(hr,hoot_digi_oot3[i],nOOT3,j);
+
+	computeOOTDigi(hr,hdiff,hdigi3[i],j);
+
+
+
 
       }// end of loop over layers
   }
@@ -116,6 +140,9 @@ void recomputeOOT(std::string fin)
     hoot[i]->Write();
     hoot2[i]->Write();
     hoot3[i]->Write();
+    hdigi[i]->Write();
+    hdigi2[i]->Write();
+    hdigi3[i]->Write();
     hoot_digi_oot[i]->Write();
     hoot_digi_oot2[i]->Write();
     hoot_digi_oot3[i]->Write();
