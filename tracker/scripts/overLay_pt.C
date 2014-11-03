@@ -15,7 +15,7 @@ const int nBunches=20;
 void overLay_pt(std::string fin)
 {
   
-  TString endfix=gSystem->GetFromPipe(Form("file=%s; test=${file##*histo_oot_charged_}; echo \"${test%%_timeW03.root*}\"",fin.data()));
+  TString endfix=gSystem->GetFromPipe(Form("file=%s; test=${file##*histo_oot_}; echo \"${test%%_timeW03.root*}\"",fin.data()));
   std::string filename = Form("pt_%s_5bunches.pdf",endfix.Data());
   cout << "Output file = " << filename << endl;
 

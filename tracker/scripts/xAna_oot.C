@@ -109,6 +109,7 @@ void xAna_oot(std::string fin, int processType=-1, float readoutWindow=3){
     }
 
   TH1I* htof_diff= new TH1I("htof_diff","", 400,-10,10);
+  TH1I* htof_diff2= new TH1I("htof_diff","", 500,-50,50);
 
   TH1I* htof     = new TH1I("htof","", 500,0, 500);
   TH1I* hetof    = new TH1I("hetof","", 100,0, 20);
@@ -116,7 +117,10 @@ void xAna_oot(std::string fin, int processType=-1, float readoutWindow=3){
 
   TH1I* ht[2][15];
   TH1I* hdiff[2][15];
+  TH1I* hdebug[2][15];
   TH1I* hdiff2[2][15];
+  TH1I* hdebug2[2][15];
+
   TH1I* hdiff3[2][15];
   TH1I* het[2][15];
   TH1I* het2[2][15];
@@ -159,10 +163,21 @@ void xAna_oot(std::string fin, int processType=-1, float readoutWindow=3){
       hdiff[k][i]->SetXTitle("Difference of TOF from expectation: ns");
       hdiff[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 				 subtitle[k].data(),i+1));
+
       hdiff2[k][i]=(TH1I*)htof->Clone(Form("hdiff2%d%02i",k,i));
       hdiff2[k][i]->SetXTitle("Difference of TOF from expectation 2: ns");
       hdiff2[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
 				 subtitle[k].data(),i+1));
+
+      hdebug[k][i]=(TH1I*)htof_diff2->Clone(Form("hdebug%d%02i",k,i));
+      hdebug[k][i]->SetXTitle("Difference of TOF from expectation: ns");
+      hdebug[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
+				 subtitle[k].data(),i+1));
+
+      hdebug2[k][i]=(TH1I*)htof_diff2->Clone(Form("hdebug2%d%02i",k,i));
+      hdebug2[k][i]->SetXTitle("Difference of TOF from expectation 2: ns");
+      hdebug2[k][i]->SetTitle(Form("%s, %s %d",title[k].data(),
+				   subtitle[k].data(),i+1));
 
       hdiff3[k][i]=(TH1I*)htof->Clone(Form("hdiff3%d%02i",k,i));
       hdiff3[k][i]->SetXTitle("Difference of TOF from expectation 3: ns");
@@ -337,6 +352,7 @@ void xAna_oot(std::string fin, int processType=-1, float readoutWindow=3){
 
        het2[decIndex][subLayerIndex]->Fill(timeZ);
        hdiff2[decIndex][subLayerIndex]->Fill(fabs(tdiff2));
+       hdebug2[decIndex][subLayerIndex]->Fill(tdiff2);
 
       for(int k=0; k < nBunches; k++)
           {
@@ -378,9 +394,12 @@ void xAna_oot(std::string fin, int processType=-1, float readoutWindow=3){
       ht[decIndex][subLayerIndex]->Fill(time);
       het[decIndex][subLayerIndex]->Fill(expectedTime);
       hdiff[decIndex][subLayerIndex]->Fill(fabs(tdiff));
+
+      hdebug[decIndex][subLayerIndex]->Fill(tdiff);
+
       for(int k=0; k < nBunches; k++) 
 	{
-	  if(fabs(fabs(tdiff)-(Float_t)25*k)< readoutWindow){
+	  if(fabs(tdiff-(Float_t)25*k)< readoutWindow){
 	    hr[decIndex][subLayerIndex]->Fill(k);
 	    hdiff_digi[decIndex][subLayerIndex][k]->Fill(fabs(tdiff));
  	    if(itrk>=0)hpt_digi[decIndex][subLayerIndex][k]->Fill(trkPt[itrk]);
@@ -410,6 +429,9 @@ void xAna_oot(std::string fin, int processType=-1, float readoutWindow=3){
 	hdiff[i][j]->Write();
         hdiff2[i][j]->Write();
         hdiff3[i][j]->Write();
+
+	hdebug[i][j]->Write();
+        hdebug2[i][j]->Write();
 
 	het[i][j]->Write();
         het2[i][j]->Write();

@@ -380,7 +380,7 @@ void xAna_oot_particleGun(std::string fin, int processType=-1, float readoutWind
       hdiff[decIndex][subLayerIndex]->Fill(tdiff);
       for(int k=0; k < nBunches; k++) 
 	{
-	  if(fabs(fabs(tdiff)-(Float_t)25*k)< readoutWindow){
+	  if(fabs(tdiff-(Float_t)25*k)< readoutWindow){
 	    hr[decIndex][subLayerIndex]->Fill(k);
 	    hdiff_digi[decIndex][subLayerIndex][k]->Fill(fabs(tdiff));
  	    if(itrk>=0)hpt_digi[decIndex][subLayerIndex][k]->Fill(trkPt[itrk]);
