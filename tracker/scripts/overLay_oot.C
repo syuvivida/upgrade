@@ -34,9 +34,9 @@ void plot(std::string histoName, std::string xtitle)
   std::string tempName[2];
   tempName[0]=histoName;
   // TString endfix2=gSystem->GetFromPipe(Form("file=%s; echo \"${file##*hoot}\"",histoName.data()));
-  TString endfix2=gSystem->GetFromPipe(Form("file=%s; echo \"${file##*hdigi}\"",histoName.data()));
+  TString endfix2=gSystem->GetFromPipe(Form("file=%s; echo \"${file##*hlost}\"",histoName.data()));
   // tempName[1]=Form("hoot2%s",endfix2.Data());
-  tempName[1]=Form("hdigi2%s",endfix2.Data());
+  tempName[1]=Form("hlost2%s",endfix2.Data());
   cout << tempName[1] << endl;
   for(int i=0; i< 2; i++){
 
@@ -74,9 +74,9 @@ void overLay_oot(std::string fin){
 
   c1->cd();
 
-  plot("hdigi_Barrel","Layer");
+  plot("hlost_Barrel","Layer");
   c1->Print(Form("%s(",filename.data()));
-  plot("hdigi_Endcap","Disk");
+  plot("hlost_Endcap","Disk");
   c1->Print(Form("%s)",filename.data()));
   
   // plot("hoot_Barrel","Layer");
