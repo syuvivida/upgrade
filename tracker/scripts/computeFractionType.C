@@ -44,6 +44,7 @@ void computeFractionType(std::string fin)
 
   const int nLayers[2] = {10,15};
   std::string title[2]={"Barrel","Endcaps"};
+  std::string xtitle[2]={"Layer","Disk"};
 
 
   TFile* f  = new TFile(fin.data());
@@ -93,6 +94,7 @@ void computeFractionType(std::string fin)
     hnorm[i]->SetMaximum(1.1);
     hnorm[i]->SetMinimum(0);
     hnorm[i]->SetTitle(hall[i]->GetTitle());
+    hnorm[i]->SetXTitle(xtitle[i].data());
     hnorm[i]->Draw("hist");
     hall[i]->Draw("histsame");
     leg->Clear();
