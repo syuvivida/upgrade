@@ -3,7 +3,7 @@ upgrade
 
 codes related to upgrade project
 
-git clone git@github.com:syuvivida/upgrade.git upgrade
+git clone git@github.com:syuvivida/upgrade.git
 
 cd upgrade
 
