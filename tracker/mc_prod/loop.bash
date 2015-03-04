@@ -1,10 +1,10 @@
 #!/bin/bash
 scriptname=`basename $0`
-EXPECTED_ARGS=1
+EXPECTED_ARGS=2
 if [ $# -ne $EXPECTED_ARGS ]
 then
-echo "Usage: $scriptname script"
-echo "Example: ./$scriptname runStep1.sh"
+echo "Usage: $scriptname script queue"
+echo "Example: ./$scriptname runStep1.sh 2nd"
 exit 1
 fi
 
@@ -36,6 +36,6 @@ while [ $iteration -lt $lastfile ];
 do
   iteration=$(( iteration + 1 ))
   echo $iteration
-  bsub -q 2nd $PWD/$1 $PWD $iteration
+  bsub -q $2 $PWD/$1 $PWD $iteration
 
 done
