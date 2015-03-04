@@ -1,14 +1,15 @@
 #!/bin/bash
 scriptname=`basename $0`
-EXPECTED_ARGS=2
+EXPECTED_ARGS=1
 if [ $# -ne $EXPECTED_ARGS ]
 then
-echo "Usage: $scriptname inputPython outputPython"
-echo "Example: ./$scriptname FourMuPt_1_200_cfi_GEN_SIM.py ntuple.py"
+echo "Usage: $scriptname inputPython"
+echo "Example: ./$scriptname FourMuPt_1_200_cfi_GEN_SIM.py"
 exit 1
 fi
 
-rm -rf $2
-sed '/Geometry/d' genOnly.py > $2
+file=ntuple.py
+rm -rf $file
+sed '/Geometry/d' genOnly.py > $file
 text=`grep -a Geometry $1`
-echo "$text" >> $2
+echo "$text" >> $file
