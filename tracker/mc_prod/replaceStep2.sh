@@ -24,5 +24,7 @@ options.parseArguments()
 EOF
 
 cat $1 >> $outputfile
-sed -i -e 's/.*input.*/input = cms.untracked.int32(-1)/ ; s/fileNames = cms.untracked.vstring(\x27file:step1.root\x27)/fileNames = cms.untracked.vstring(options.inputFiles)/g;  s/fileName = cms.untracked.string(\x27file:step2.root\x27)/fileName = cms.untracked.string(options.myOutputFile)/g' $outputfile 
+sed -i -e 's/.*input.*/input = cms.untracked.int32(-1)/' $outputfile 
+sed -i -e 's/fileNames = cms.untracked.vstring(\x27file:step1.root\x27)/fileNames = cms.untracked.vstring(options.inputFiles)/g' $outputfile
+sed -i -e 's/fileName = cms.untracked.string(\x27file:step2.root\x27)/fileName = cms.untracked.string(options.myOutputFile)/g' $outputfile 
 

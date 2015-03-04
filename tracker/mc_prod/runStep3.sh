@@ -28,6 +28,7 @@ finalfile=step3_$2.root
 echo $finalfile
 DQMfile=step3_DQM_$2.root
 echo $DQMfile
-
+rm -rf $finalfile
+rm -rf $DQMfile
 cmsRun step3.py inputFiles=$infile myOutputFile=$finalfile myDQMFile=$DQMfile
 

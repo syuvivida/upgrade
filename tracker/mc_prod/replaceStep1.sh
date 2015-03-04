@@ -29,5 +29,12 @@ options.parseArguments()
 EOF
 
 cat $1 >> $outputfile
-sed -i -e 's/.*input.*/input = cms.untracked.int32(options.maxEvents)/ ; s/fileName = cms.untracked.string(\x27file:step1.root\x27)/fileName = cms.untracked.string(options.myOutputFile)/g' $outputfile 
+sed -i -e 's/.*input.*/input = cms.untracked.int32(options.maxEvents)/' $outputfile
+sed -i -e 's/fileName = cms.untracked.string(\x27file:step1.root\x27)/fileName = cms.untracked.string(options.myOutputFile)/g' $outputfile 
+sed -i -e 's/.*MaxEta.*/MaxEta = cms.double(4.5),/' $outputfile
+sed -i -e 's/.*MinEta.*/MinEta = cms.double(-4.5),/' $outputfile
+sed -i -e 's/.*MaxPt.*/MaxPt = cms.double(10.01),/' $outputfile
+sed -i -e 's/.*MinPt.*/MinPt = cms.double(9.99),/' $outputfile
+ 
+
 echo "process.RandomNumberGeneratorService.externalLHEProducer.initialSeed =options.seed" >> $outputfile

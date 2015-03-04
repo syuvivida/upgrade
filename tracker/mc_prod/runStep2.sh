@@ -28,5 +28,6 @@ file="file:"$tempfile
 echo $file
 outfile=step2_$2.root
 echo $outfile
+rm -rf $outfile
 cmsRun step2.py inputFiles=$file myOutputFile=$outfile
 

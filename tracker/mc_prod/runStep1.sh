@@ -25,5 +25,5 @@ a=`ksh 'echo $RANDOM'`
 echo $a
 z=$((i / a))
 echo $z
-
+rm -rf $file
 cmsRun step1.py myOutputFile=$file seed=$z maxEvents=1000
