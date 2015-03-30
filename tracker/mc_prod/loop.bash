@@ -19,15 +19,15 @@ if [ ! -e $PWD/step1.py ]; then
 exit 1
 fi
 
-if [ ! -e $PWD/step2.py ]; then
- echo $PWD/"step2.py does not exist!"
-exit 1
-fi
+#if [ ! -e $PWD/step2.py ]; then
+# echo $PWD/"step2.py does not exist!"
+#exit 1
+#fi
 
-if [ ! -e $PWD/step3.py ]; then
- echo $PWD/"step3.py does not exist!"
-exit 1
-fi
+#if [ ! -e $PWD/step3.py ]; then
+# echo $PWD/"step3.py does not exist!"
+#exit 1
+#fi
 
 iteration=0
 lastfile=1
