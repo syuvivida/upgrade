@@ -30,12 +30,12 @@ exit 1
 fi
 
 iteration=0
-lastfile=20
+lastfile=1
 
 while [ $iteration -lt $lastfile ]; 
 do
   iteration=$(( iteration + 1 ))
   echo $iteration
-  bsub -q $2 $PWD/$1 $PWD $iteration
-
+  #bsub -q $2 $PWD/$1 $PWD $iteration
+  ./$1 $PWD $iteration
 done
