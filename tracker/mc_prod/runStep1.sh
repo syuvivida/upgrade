@@ -26,4 +26,4 @@ echo $a
 z=$((i / a))
 echo $z
 rm -rf $file
-cmsRun step1.py myOutputFile=$file seed=$z maxEvents=200
+cmsRun step1.py myOutputFile=$file seed=$z maxEvents=2000
