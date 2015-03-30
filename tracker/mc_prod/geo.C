@@ -84,7 +84,7 @@ void geo(std::string fin){
 
 
   }
-  c1->Print(geo.jpg);
+  c1->Print("geo.jpg");
   /*
 TFile* outFile = new TFile("geo.root","recreate");
  c1->Write();
