@@ -9,7 +9,7 @@ echo "Example: ./$scriptname $PWD 1"
 exit 1
 fi
 
-tempfile=step3_$2.root
+tempfile=step1_$2.root
 if [ ! -e $1/$tempfile ]; then
  echo $1/$tempfile " does not exist!"
 exit 1
