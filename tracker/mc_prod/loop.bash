@@ -36,6 +36,5 @@ while [ $iteration -lt $lastfile ];
 do
   iteration=$(( iteration + 1 ))
   echo $iteration
-  #bsub -q $2 $PWD/$1 $PWD $iteration
   ./$1 $PWD $iteration
 done
