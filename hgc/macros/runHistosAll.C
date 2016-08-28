@@ -4,9 +4,10 @@
 #include "computeSaturation.C"
 using namespace std;
 
-void runHistosAll(string particle,string energy)
+void runHistosAll(string particle,string energy, bool profile=false)
 {
-  string textFileName = particle+energy+"_HighGain_LowGain_2D_type.dat";
+  string textFileName = profile? "profile_"+particle+energy+"_HighGain_LowGain_2D_type.dat":
+    particle+energy+"_HighGain_LowGain_2D_type.dat";
   
   gSystem->Exec(Form("rm -rf %s",textFileName.data()));
   
@@ -25,7 +26,7 @@ void runHistosAll(string particle,string energy)
       string fileName;
       fin >> fileName;
       if(!fin.eof())
-	computeSaturation(fileName);
+	computeSaturation(fileName,profile);
     }
 
 

@@ -7,6 +7,7 @@
 #include <TMatrixD.h>
 #include <TFile.h>
 #include <TSystem.h>
+#include <TProfile.h>
 
 using namespace std;
 
@@ -74,7 +75,7 @@ void cutoff(double* locutoff, double* hicutoff, const TFitResult& low, const TFi
 }
 
 
-void computeSaturation(string inputFile, string histoPrefix="HighGain_LowGain_2D_type")
+void computeSaturation(string inputFile, bool profile,string histoPrefix="HighGain_LowGain_2D_type")
 {
   bool hasType=false;
   if(histoPrefix.find("type")!=std::string::npos)hasType=true;
@@ -87,8 +88,11 @@ void computeSaturation(string inputFile, string histoPrefix="HighGain_LowGain_2D
   TF1* fhi = new TF1("fhi","[0]*x+[1]");
   TString prefix=gSystem->GetFromPipe(Form("file=%s; test=${file##*/}; test2=${test%%_HGC*}; echo \"${test2}\"",inputFile.data()));
 
+  if(profile)prefix = "profile_" + prefix;
+
   TString runNumber=gSystem->GetFromPipe(Form("file=%s; test=${file##*_}; test2=${test%%.root*}; echo \"${test2}\"",inputFile.data()));
 
+  string runNumber_string = runNumber.Data();
   string prefix_string = prefix.Data();
   //  cout << prefix_string << endl;
   ofstream fout;
@@ -96,17 +100,56 @@ void computeSaturation(string inputFile, string histoPrefix="HighGain_LowGain_2D
 
   for(int it=0; it< NTYPES; it++)
     {  
-      if(it==2 || it==3)continue;
-      if(prefix_string.find("pion")!=std::string::npos && it!=0)continue;
+      if(prefix_string.find("electron")!=std::string::npos && 
+	 runNumber_string.find("all")==std::string::npos &&
+	 prefix_string.find("overnight")!=std::string::npos && 
+	 it!=0 && it!=2)continue;
+      else if(prefix_string.find("electron")!=std::string::npos && 
+	 runNumber_string.find("all")!=std::string::npos && 
+	 prefix_string.find("250GeV")!=std::string::npos && 
+	 it==3)continue;
+
+      else if(prefix_string.find("electron")!=std::string::npos && 
+	      runNumber_string.find("all")!=std::string::npos && 
+	      prefix_string.find("250GeV")==std::string::npos && 
+	      it!=0 && it!=1 && it!=4)continue;
+
+      else if(prefix_string.find("electron")!=std::string::npos && 
+	      runNumber_string.find("all")==std::string::npos &&
+	      prefix_string.find("overnight")==std::string::npos && 
+	      it!=0 && it!=1 && it!=4)continue;
+
+      else if(prefix_string.find("pion")!=std::string::npos && 
+	      runNumber_string.find("all")!=std::string::npos &&
+	      it!=0 && it!=2 && it!=4)continue;
+
+      else if(prefix_string.find("pion")!=std::string::npos && 
+	      runNumber_string.find("all")==std::string::npos &&
+	      it!=0)continue;
+
+      cout << "it = " << it << endl;
+
       h2D[it] = (TH2F*)(f1->FindObjectAny(Form("%s%d",histoPrefix.data(),it)));
       h2D[it] ->SetName(Form("h2D%d",it));
       double par[4];
       double parerr[4];
-      TFitResultPtr fitptr_lo=h2D[it] ->Fit("flo","S","",0,150); 
-      TFitResult fitresult_lo = (*fitptr_lo);
+      TFitResultPtr fitptr_lo;
+      TFitResultPtr fitptr_hi;
+      if(!profile)
+	{
+	  fitptr_lo=h2D[it] ->Fit("flo","S","",0,150); 
+	  fitptr_hi=h2D[it] ->Fit("fhi","S","",250,400); 
+	}
+      else
+	{
+	  TProfile* pfx = h2D[it]->ProfileX();
+	  fitptr_lo=pfx ->Fit("flo","S","",0,150); 
+	  fitptr_hi=pfx ->Fit("fhi","S","",250,400); 
+	}
 
-      TFitResultPtr fitptr_hi=h2D[it] ->Fit("fhi","S","",250,400); 
+      TFitResult fitresult_lo = (*fitptr_lo);
       TFitResult fitresult_hi = (*fitptr_hi);
+
       double LG_cutoff[2], HG_cutoff[2];
       cutoff(LG_cutoff, HG_cutoff,fitresult_lo, fitresult_hi);
       cout << "LG cut off = " << LG_cutoff[0] << " +- " << LG_cutoff[1] << endl;
