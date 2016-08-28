@@ -77,7 +77,7 @@ void cutoff(double* locutoff, double* hicutoff, const TFitResult& low, const TFi
 void computeSaturation(string inputFile, string histoPrefix="HighGain_LowGain_2D_type")
 {
   bool hasType=false;
-  if(histoPrefix.find("type"))hasType=true;
+  if(histoPrefix.find("type")!=std::string::npos)hasType=true;
   const int NTYPES= hasType? 5:1;
 
   TH2F* h2D[NTYPES];
@@ -89,12 +89,15 @@ void computeSaturation(string inputFile, string histoPrefix="HighGain_LowGain_2D
 
   TString runNumber=gSystem->GetFromPipe(Form("file=%s; test=${file##*_}; test2=${test%%.root*}; echo \"${test2}\"",inputFile.data()));
 
+  string prefix_string = prefix.Data();
+  //  cout << prefix_string << endl;
   ofstream fout;
   fout.open(Form("%s_%s.dat",prefix.Data(),histoPrefix.data()),ios::out | ios::app);
 
   for(int it=0; it< NTYPES; it++)
     {  
       if(it==2 || it==3)continue;
+      if(prefix_string.find("pion")!=std::string::npos && it!=0)continue;
       h2D[it] = (TH2F*)(f1->FindObjectAny(Form("%s%d",histoPrefix.data(),it)));
       h2D[it] ->SetName(Form("h2D%d",it));
       double par[4];

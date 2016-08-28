@@ -6,7 +6,10 @@ using namespace std;
 
 void runHistosAll(string particle,string energy)
 {
-
+  string textFileName = particle+energy+"_HighGain_LowGain_2D_type.dat";
+  
+  gSystem->Exec(Form("rm -rf %s",textFileName.data()));
+  
   string inputDir="rootfiles/"+particle+"/"+energy;
   gSystem->Exec("rm -rf inputrootfiles.dat");
   string name = "ls -1 "+inputDir+"/*root > inputrootfiles.dat";
