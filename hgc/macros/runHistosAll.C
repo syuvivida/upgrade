@@ -2,6 +2,7 @@
 #include <fstream>
 #include <TROOT.h>
 #include "computeSaturation.C"
+
 using namespace std;
 
 void runHistosAll(string particle,string energy, bool profile=false)
@@ -10,6 +11,7 @@ void runHistosAll(string particle,string energy, bool profile=false)
     particle+energy+"_HighGain_LowGain_2D_type.dat";
   
   gSystem->Exec(Form("rm -rf %s",textFileName.data()));
+  gSystem->Exec(Form("rm -rf slope_%s",textFileName.data()));
   
   string inputDir="rootfiles/"+particle+"/"+energy;
   gSystem->Exec("rm -rf inputrootfiles.dat");
@@ -18,8 +20,6 @@ void runHistosAll(string particle,string energy, bool profile=false)
 
   ifstream fin;
   fin.open("inputrootfiles.dat");
-
-  gROOT->ProcessLine(".L computeSaturation.C++");
 
   while(!fin.eof())
     {
