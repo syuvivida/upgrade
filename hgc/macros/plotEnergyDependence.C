@@ -7,7 +7,7 @@
 using namespace std;
 
 
-void plotEnergyDependence()
+void plotEnergyDependence(std::string histoName="HighGain_LowGain_2D_type")
 {
   const int NFILES=6;
   string LabelNames[NFILES]={"e 70GeV (p4)",
@@ -35,8 +35,7 @@ void plotEnergyDependence()
  
   for(int i=0;i<NFILES;i++){
     ifstream fin;
-    fin.open(Form("output_data/%s_HighGain_LowGain_2D_type.dat",inputNames[i].data()));
-    cout << "opening " << Form("output_data/%s_HighGain_LowGain_2D_type.dat",inputNames[i].data()) << endl;
+    fin.open(Form("output_data/%s_%s.dat",inputNames[i].data(),histoName.data()));
     while(!fin.eof())
       {
 	string run;

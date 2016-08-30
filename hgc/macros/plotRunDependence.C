@@ -154,7 +154,7 @@ void plotRunDependence(string inputTextFile)
 
   leg->Draw("same");
   temp = prefix.Data();
-  outputFile="figures/HG_" + temp + "_runDependence";
+  outputFile="figures/HG_" + temp + "_" + position.Data() + "_runDependence";
   final = outputFile + ".pdf";
 
   c1->Print(final.data());
