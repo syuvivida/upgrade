@@ -70,7 +70,8 @@ const double PION_7CELLS_THRESHOLD = -100.;
 const double PION_19CELLS_THRESHOLD = -100.;
 
 const int NTYPES=5;
-
+const int NCHIPS=2;
+const int NCHANS=64;
 using namespace std;
 
 
@@ -108,6 +109,8 @@ private:
         TH2F *h_x_y_layer[MAXLAYERS];
   // added by Eiko
         TH2F *HighGain_LowGain_2D[NTYPES]; 
+        TH2F *HighGain_LowGain_2D_skiroc[NCHIPS][NTYPES]; 
+        TH2F *HighGain_LowGain_2D_chan[NCHIPS][NCHANS]; 
         TH2F *HighGain_LowGain_2D_commonmode_subtracted[NTYPES]; 
         TH2F *HighGain_LowGain_2D_sum7cellEnergy; 
 
@@ -186,6 +189,23 @@ Layer_Sum_Analyzer::Layer_Sum_Analyzer(const edm::ParameterSet& iConfig)
 	HighGain_LowGain_2D_sum7cellEnergy = fs->make<TH2F>(name3.str().c_str(), name3.str().c_str(),
 							    4000,0,4000,15010,-10,15000);
 
+	for(int is = 0; is < NCHIPS; is++){
+	  for(int it = 0; it < NTYPES; it++){
+	    stringstream name1;
+	    name1 << "HighGain_LowGain_2D_skiroc" << is << Form("%02i",it);	    
+	    HighGain_LowGain_2D_skiroc[is][it] = fs->make<TH2F>(name1.str().c_str(), name1.str().c_str(),4000,0,4000,4000,0,4000);		  
+	  } // end of loop over types
+
+	  for(int ic = 0; ic < NCHANS; ic++){
+	    stringstream name2;
+	    name2 << "HighGain_LowGain_2D_chan" << is << Form("%02i",ic);	    
+	    HighGain_LowGain_2D_chan[is][ic] = fs->make<TH2F>(name2.str().c_str(), name2.str().c_str(),4000,0,4000,4000,0,4000);	
+	  } // end of loop over channels, 0-63
+	} // end loop over skirocs, 0-2
+
+							    
+
+
 }//constructor ends here
 
 
@@ -236,11 +256,15 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 		//getting electronics ID
 		uint32_t EID = essource_.emap_.detId2eid(Rechit.id());
 		HGCalTBElectronicsId eid(EID);
-
+		
 		//getting X and Y coordinates
 		CellCentreXY = TheCell.GetCellCentreCoordinatesForPlots((Rechit.id()).layer(), (Rechit.id()).sensorIU(), (Rechit.id()).sensorIV(), (Rechit.id()).iu(), (Rechit.id()).iv(), sensorsize);
 		int type = (Rechit.id()).cellType();
+		int skiroc_chip = eid.iskiroc()-1;
+		int chan = eid.ichan();
                 HighGain_LowGain_2D[type]->Fill(Rechit.energyLow(),Rechit.energyHigh());
+		HighGain_LowGain_2D_skiroc[skiroc_chip][type]->Fill(Rechit.energyLow(),Rechit.energyHigh());
+		HighGain_LowGain_2D_chan[skiroc_chip][chan]->Fill(Rechit.energyLow(),Rechit.energyHigh());
 
                 if((Rechit.id()).cellType() != 0) continue;
 
