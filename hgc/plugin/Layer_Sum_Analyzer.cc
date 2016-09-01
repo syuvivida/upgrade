@@ -40,6 +40,9 @@
 #include "HGCal/Geometry/interface/HGCalTBCellVertices.h"
 #include "HGCal/Geometry/interface/HGCalTBCellParameters.h"
 #include "HGCal/Geometry/interface/HGCalTBSpillParameters.h"
+#include "HGCal/Reco/interface/Clustering.h"
+#include "HGCal/Reco/interface/ClusteringHelper.h"
+#include "HGCal/DataFormats/interface/MyHGCalRecHit.h"
 
 // chooses which particle to look at. Inverts threshold filtering.
 // if nothing is selected, electrons are the default
@@ -107,12 +110,17 @@ private:
 	TH1F *h_sum_layer[MAXLAYERS], *h_layer_seven[MAXLAYERS], *h_layer_nineteen[MAXLAYERS], *h_sum_all, *h_seven_all, *h_nineteen_all;
         TH1F *h_x_layer[MAXLAYERS], *h_y_layer[MAXLAYERS];
         TH2F *h_x_y_layer[MAXLAYERS];
-  // added by Eiko
+        
+	TH1F *h_layer_clusterEnergy[MAXLAYERS], *h_clusterEnergy_all, *h_2ndclusterEnergy_all, *h_clusterEnergyLow_all, *h_clusterSize_all, *h_nclusters_all, *h_minDistance;
+  
+        // added by Eiko
         TH2F *HighGain_LowGain_2D[NTYPES]; 
         TH2F *HighGain_LowGain_2D_skiroc[NCHIPS][NTYPES]; 
         TH2F *HighGain_LowGain_2D_chan[NCHIPS][NCHANS]; 
         TH2F *HighGain_LowGain_2D_commonmode_subtracted[NTYPES]; 
         TH2F *HighGain_LowGain_2D_sum7cellEnergy; 
+   
+        TH2F *h_NhitVsTotEnergy, *h_NhitVsClusterEnergy, *h_ClusterEnergyVsTotEnergy;
 
 	int SPILL = 0, EVENT = 0, LAYER = 0;
 	double AllCells[MAXLAYERS][EVENTSPERSPILL * SPILLS] = {{0.}};
@@ -123,6 +131,14 @@ private:
         double Time_Stamp[EVENTSPERSPILL * SPILLS] = {0.};
         double Delta_Time_Stamp[EVENTSPERSPILL * SPILLS] = {0.};  
         double Time_Temp = 0.;
+
+	clusteringParameterSetting m_clusteringParameterSetting;
+	Clustering *clusteringAlgo;
+	std::vector<MyHGCalRecHit*> rechitVec;
+	SortClusterByEnergy<HGCalTBCluster2D,HGCalTBCluster2D> sorter;
+	SortClusterByEnergy<MyHGCalRecHit,MyHGCalRecHit> hitSorter;
+	DistanceBetweenCluster<HGCalTBCluster2D,HGCalTBCluster2D> distCluster;
+
 };
 
 
@@ -151,13 +167,14 @@ Layer_Sum_Analyzer::Layer_Sum_Analyzer(const edm::ParameterSet& iConfig)
 
 	//booking the histos
 	for(int layer = 0; layer < MAXLAYERS; layer++){
-		stringstream name, sevenname, nineteenname, Xname, Yname, X_Y_name;
+		stringstream name, sevenname, nineteenname, Xname, Yname, X_Y_name, clusterEnergyname;
 		name << "AllCells_Sum_Layer" << layer + 1;
 		sevenname << "Cells7_Sum_Layer" << layer + 1;
 		nineteenname << "Cells19_Sum_Layer" << layer + 1;
                 Xname << "X_Layer" << layer + 1;
                 Yname << "Y_Layer" << layer + 1;
                 X_Y_name<<"X_Y_Layer"<< layer + 1;
+                clusterEnergyname << "clusterEnergy" << layer + 1;
 
 		h_sum_layer[layer] = fs->make<TH1F>(name.str().c_str(), name.str().c_str(), 622, -10, 612);
 		h_layer_seven[layer] = fs->make<TH1F>(sevenname.str().c_str(), sevenname.str().c_str(), 622, -10, 612);
@@ -165,6 +182,7 @@ Layer_Sum_Analyzer::Layer_Sum_Analyzer(const edm::ParameterSet& iConfig)
                 h_x_layer[layer] = fs->make<TH1F>(Xname.str().c_str(), Xname.str().c_str(),2000,-10.,10. );
                 h_y_layer[layer] = fs->make<TH1F>(Yname.str().c_str(), Yname.str().c_str(),2000,-10.,10. );
                 h_x_y_layer[layer] = fs->make<TH2F>(X_Y_name.str().c_str(), X_Y_name.str().c_str(),2000,-10.,10.,2000,-10.,10. );
+   	        h_layer_clusterEnergy[layer] = fs->make<TH1F>(clusterEnergyname.str().c_str(), clusterEnergyname.str().c_str(),2000,0.,100000. );
 	}
 
 	h_sum_all = fs->make<TH1F>("AllCells_Sum_AllLayers", "AllCells_Sum_AllLayers", 40010, -10, 40000);
@@ -203,15 +221,43 @@ Layer_Sum_Analyzer::Layer_Sum_Analyzer(const edm::ParameterSet& iConfig)
 	  } // end of loop over channels, 0-63
 	} // end loop over skirocs, 0-2
 
-							    
-
+	h_NhitVsClusterEnergy = fs->make<TH2F>("NhitVsClusterEnergy","NhitVsClusterEnergy",4001,-10,40000,100,0,100);
+        h_NhitVsTotEnergy = fs->make<TH2F>("NhitVsTotEnergy","NhitVsTotEnergy",4001,-10,40000,100,0,100);
+        h_ClusterEnergyVsTotEnergy = fs->make<TH2F>("ClusterEnergyVsTotEnergy","ClusterEnergyVsTotEnergy",4001,-10,40000,4001,-10,40000);
+        
+        h_clusterEnergy_all = fs->make<TH1F>("ClusterEnergy_Sum_AllLayers", "ClusterEnergy_Sum_AllLayers", 4001, -10, 40000);
+        h_clusterEnergy_all->Sumw2();
+        
+        h_clusterEnergyLow_all = fs->make<TH1F>("ClusterEnergyLow_Sum_AllLayers", "ClusterEnergyLow_Sum_AllLayers", 501, -10, 5000);
+        h_clusterEnergyLow_all->Sumw2();
+        
+        h_clusterSize_all = fs->make<TH1F>("ClusterSize_Sum_AllLayers", "ClusterSize_Sum_AllLayers", 100, 0, 100);
+        h_clusterSize_all->Sumw2();
+        
+        h_2ndclusterEnergy_all = fs->make<TH1F>("h_2ndClusterEnergy_Sum_AllLayers", "h_2ndClusterEnergy_Sum_AllLayers", 4001, -10, 40000);
+        h_2ndclusterEnergy_all->Sumw2();
+        
+        h_nclusters_all = fs->make<TH1F>("NClustersAll", "NClustersAll", 100, 0, 100);
+        h_nclusters_all->Sumw2();
+        
+        h_minDistance = fs->make<TH1F>("MinDistance", "MinDistance", 200, 0, 20);
+        h_minDistance->Sumw2();
+        
+        /*Arnaud Steen hardcoded here*/
+        m_clusteringParameterSetting.maxTransverse=1;
+        m_clusteringParameterSetting.useDistanceInsteadCellID=false;
+        m_clusteringParameterSetting.maxTransverseDistance=11.0;
+        m_clusteringParameterSetting.useEnergyToWeightPosition=false;
+        clusteringAlgo = new Clustering();
+        clusteringAlgo->SetClusteringParameterSetting(m_clusteringParameterSetting);
+						    
 
 }//constructor ends here
 
 
 Layer_Sum_Analyzer::~Layer_Sum_Analyzer()
 {
-
+        delete clusteringAlgo;
 	// do anything here that needs to be done at desctruction time
 	// (e.g. close files, deallocate resources etc.)
 
@@ -321,6 +367,8 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
         double x_tmp = 0., y_tmp = 0.;  
 	int num, sevennum, LG_sevennum, nineteennum;
 	num = sevennum = LG_sevennum = nineteennum = 0;
+	float totEnergy=0.0;
+	
 	for(auto Rechit1 : *Rechits1){
 				 
 		//getting electronics ID
@@ -360,6 +408,16 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
                         y_tmp += CellCentreXY.second*((Rechit1.energyHigh() - commonmode) / ADCtoMIP[LAYER]);
 			nineteennum++;
 		}
+	
+		if(((Rechit1.energyHigh() - commonmode)/ADCtoMIP[LAYER]) > CMTHRESHOLD)    {
+    	          int cellID[]={(Rechit1.id()).iu(),(Rechit1.id()).iv(),(Rechit1.id()).layer()};
+                  CLHEP::Hep3Vector pos( CellCentreXY.first, CellCentreXY.second, cellID[2] );
+
+      		  MyHGCalRecHit* aHit=new MyHGCalRecHit( cellID, pos, Rechit1.energyLow(), (Rechit1.energyHigh() - commonmode)/ADCtoMIP[LAYER], Rechit1.time() );
+     			 rechitVec.push_back(aHit);
+   		         totEnergy+=(Rechit1.energyHigh() - commonmode)/ADCtoMIP[LAYER];
+    }
+
 	}
 
 	AllCells[LAYER][EVENT] = allcells_sum;
@@ -369,6 +427,51 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 
         if(nineteennum> 1 &&  nineteencells_sum > 0) X_Layer[LAYER][EVENT] = x_tmp/nineteencells_sum ;  
         if(nineteennum> 1 &&  nineteencells_sum > 0) Y_Layer[LAYER][EVENT] = y_tmp/nineteencells_sum ;
+
+	  std::vector<HGCalTBCluster2D*> clusters;
+  clusteringAlgo->Run(rechitVec,clusters);
+  if( !clusters.empty() ){
+    std::sort( clusters.begin(), clusters.end(), sorter.sort );
+    std::vector<HGCalTBCluster2D*>::iterator iter=clusters.begin();
+    HGCalTBCluster2D *emCluster=(*iter);
+    if( emCluster->getHighGainEnergy() > NINETEENCELLS_THRESHOLD ){
+      h_clusterEnergy_all->Fill( emCluster->getHighGainEnergy() );
+      h_clusterEnergyLow_all->Fill( emCluster->getLowGainEnergy() );
+      h_clusterSize_all->Fill( emCluster->getHits().size() );
+      h_NhitVsClusterEnergy->Fill( emCluster->getHighGainEnergy(), emCluster->getHits().size() );
+      h_NhitVsTotEnergy->Fill( totEnergy, emCluster->getHits().size() );
+      h_ClusterEnergyVsTotEnergy->Fill( totEnergy , emCluster->getHighGainEnergy() );
+      h_layer_clusterEnergy[ emCluster->getLayerID()-1 ]->Fill( emCluster->getHighGainEnergy() );
+    }
+    if( clusters.size()>=2 ){
+      std::advance(iter,1);
+      HGCalTBCluster2D *em2ndCluster=(*iter);
+      if( em2ndCluster->getHighGainEnergy() > NINETEENCELLS_THRESHOLD )
+        h_2ndclusterEnergy_all->Fill( em2ndCluster->getHighGainEnergy() );
+      if( em2ndCluster->getHighGainEnergy()>emCluster->getHighGainEnergy() ){
+        std::cout << "Problem in sorting clusters with energy -> std::abort()" << std::endl;
+        std::abort();
+      }
+    }
+    h_nclusters_all->Fill(clusters.size());
+  }
+  //std::cout << clusters.size() << " clusters found" << std::endl;
+  for( std::vector<HGCalTBCluster2D*>::iterator it=clusters.begin(); it!=clusters.end(); ++it ){
+    for( std::vector<HGCalTBCluster2D*>::iterator jt=it+1; jt!=clusters.end(); ++jt ){
+      float dist=distCluster.getDistance( (*it),(*jt) );
+      h_minDistance->Fill( dist );
+      //std::cout << "Min dist = " << dist << std::endl;
+    }
+    //std::cout << "" << std::endl;
+    //for(std::vector<MyHGCalRecHit*>::iterator jt=(*it)->getHits().begin(); jt!=(*it)->getHits().end(); ++jt)
+    //  std::cout << "...\t hit " << (*jt)->getCellID()[0] << ", " << (*jt)->getCellID()[1] << "\t"
+    //          << "... energy = " << (*jt)->getHighGainEnergy() << std::endl;
+    delete (*it);
+  }
+  //  getchar();
+  for( std::vector<MyHGCalRecHit*>::iterator it=rechitVec.begin(); it!=rechitVec.end(); ++it )
+    delete (*it);
+  rechitVec.clear();
 
 }// analyze ends here
 
