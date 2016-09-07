@@ -34,9 +34,13 @@ scram b -j32
 ### Meaning of each analyzer
 
 3 different types of analyzers are present switched via test_cfg.py
+
 1) process.hgcaltbrechitsplotter_highgain_new ---> Produces event displays for all events
+
 2) process.hgcaltbrechitsplotter_highgain_correlation_cm  ---> Produces Reco histograms for each channel as well as a scatter plot of the Reco per channel
+
 3) process.LayerSumAnalyzer ---> Produces Clusters of Recos(7cells, 19cells and all cells(full hexagons only))
 
 Can activate all 3 at the same time.
+
 The output root file produced is HGC_Output_Reco.root
