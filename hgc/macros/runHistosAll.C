@@ -11,6 +11,24 @@ void runHistosAll(string particle,string energy)
   
   gSystem->Exec(Form("rm -rf %s",textFileName.data()));
   gSystem->Exec(Form("rm -rf slope_%s",textFileName.data()));
+  
+  gSystem->Exec(Form("rm -rf profile_%s",textFileName.data()));
+  gSystem->Exec(Form("rm -rf slope_profile_%s",textFileName.data()));
+  
+  
+  textFileName = particle+energy+"_HighGain_LowGain_2D_skiroc00.dat";
+
+  gSystem->Exec(Form("rm -rf %s",textFileName.data()));
+  gSystem->Exec(Form("rm -rf slope_%s",textFileName.data()));
+
+  gSystem->Exec(Form("rm -rf profile_%s",textFileName.data()));
+  gSystem->Exec(Form("rm -rf slope_profile_%s",textFileName.data()));
+  
+
+  textFileName = particle+energy+"_HighGain_LowGain_2D_skiroc10.dat";
+  
+  gSystem->Exec(Form("rm -rf %s",textFileName.data()));
+  gSystem->Exec(Form("rm -rf slope_%s",textFileName.data()));
 
   gSystem->Exec(Form("rm -rf profile_%s",textFileName.data()));
   gSystem->Exec(Form("rm -rf slope_profile_%s",textFileName.data()));
@@ -38,15 +56,22 @@ void runHistosAll(string particle,string energy)
       string fileName;
       fin >> fileName;
       if(!fin.eof())
-	{
-	  // default histograms with only pedestal subtraction
-	  computeSaturation(fileName,false);
-	  computeSaturation(fileName,true);
-	  // add histograms that subtract common mode noise
-	  computeSaturation(fileName,false,"HighGain_LowGain_2D_commonmode_subtracted_type");
-	  computeSaturation(fileName,true,"HighGain_LowGain_2D_commonmode_subtracted_type");
+ 	{
+ 	  // default histograms with only pedestal subtraction
+ 	  computeSaturation(fileName,false);
+   	  computeSaturation(fileName,true);
+	  //  // 	  // add histograms that sub-divide into different skirocs
+    	  computeSaturation(fileName,false,"HighGain_LowGain_2D_skiroc00");
+    	  computeSaturation(fileName,true,"HighGain_LowGain_2D_skiroc00");
 
-	}
+   	  computeSaturation(fileName,false,"HighGain_LowGain_2D_skiroc10");
+   	  computeSaturation(fileName,true,"HighGain_LowGain_2D_skiroc10");
+
+	  //  // 	  // add histograms that subtract common mode noise
+   	  computeSaturation(fileName,false,"HighGain_LowGain_2D_commonmode_subtracted_type");
+   	  computeSaturation(fileName,true,"HighGain_LowGain_2D_commonmode_subtracted_type");
+
+ 	}
     }
 
 

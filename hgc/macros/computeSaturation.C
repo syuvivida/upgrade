@@ -78,6 +78,7 @@ void computeSaturation(string inputFile, bool profile,string histoPrefix="HighGa
 {
   bool hasType=false;
   if(histoPrefix.find("type")!=std::string::npos)hasType=true;
+  if(histoPrefix.find("skiroc")!=std::string::npos)hasType=true;
   const int NTYPES= hasType? 5:1;
 
   TH2F* h2D[NTYPES];
@@ -95,9 +96,6 @@ void computeSaturation(string inputFile, bool profile,string histoPrefix="HighGa
   string prefix_string = prefix.Data();
 
   // profile can only be done for large amount of data
-  if(profile && runNumber_string.find("all")==std::string::npos &&
-     prefix_string.find("pion")==std::string::npos && 
-     prefix_string.find("250GeV")==std::string::npos)return;
 
   //  cout << prefix_string << endl;
   ofstream fout;
@@ -110,34 +108,6 @@ void computeSaturation(string inputFile, bool profile,string histoPrefix="HighGa
   for(int it=0; it< NTYPES; it++)
     {  
       if(it==3)continue;
-      else if(prefix_string.find("electron")!=std::string::npos && 
-	      runNumber_string.find("all")==std::string::npos &&
-	      prefix_string.find("overnight")!=std::string::npos && 
-	      it!=0 && it!=2)continue;
-      
-      else if(prefix_string.find("electron")!=std::string::npos && 
-	      runNumber_string.find("all")!=std::string::npos &&
-	      prefix_string.find("overnight")!=std::string::npos && 
-	      profile && 
-	      it!=0 && it!=2 && it!=4)continue;
-
-      else if(prefix_string.find("electron")!=std::string::npos && 
-	      runNumber_string.find("all")!=std::string::npos && 
-	      prefix_string.find("250GeV")==std::string::npos && 
-	      it!=0 && it!=1 && it!=4)continue;
-
-      else if(prefix_string.find("electron")!=std::string::npos && 
-	      runNumber_string.find("all")==std::string::npos &&
-	      prefix_string.find("overnight")==std::string::npos && 
-	      it!=0 && it!=1 && it!=4)continue;
-
-      else if(prefix_string.find("pion")!=std::string::npos && 
-	      runNumber_string.find("all")!=std::string::npos &&
-	      it!=0 && it!=2 && it!=4)continue;
-
-      else if(prefix_string.find("pion")!=std::string::npos && 
-	      runNumber_string.find("all")==std::string::npos &&
-	      it!=0)continue;
 
       cout << "runNumber = " << runNumber << " it = " << it << endl;
 
@@ -161,6 +131,8 @@ void computeSaturation(string inputFile, bool profile,string histoPrefix="HighGa
 
       TFitResult fitresult_lo = (*fitptr_lo);
       TFitResult fitresult_hi = (*fitptr_hi);
+      if(fitresult_lo.IsEmpty())continue;
+      if(fitresult_hi.IsEmpty())continue;
 
       double LG_cutoff[2], HG_cutoff[2];
       cutoff(LG_cutoff, HG_cutoff,fitresult_lo, fitresult_hi);
@@ -177,4 +149,5 @@ void computeSaturation(string inputFile, bool profile,string histoPrefix="HighGa
     } // loop over number of cell types
   fout.close();
   fout_slope.close();
+  f1->Close();
 }
