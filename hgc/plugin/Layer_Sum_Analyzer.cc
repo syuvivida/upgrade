@@ -308,6 +308,16 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 		int type = (Rechit.id()).cellType();
 		int skiroc_chip = eid.iskiroc()-1;
 		int chan = eid.ichan();
+
+		bool isAMergedCell=false;
+                if(((Rechit.id()).cellType() == 3) && (((Rechit.id()).iu() == -4 && (Rechit.id()).iv() == 6)
+                                                       || ((Rechit.id()).iu() == -2 && (Rechit.id()).iv() == 6)
+                                                       || ((Rechit.id()).iu() == 4 && (Rechit.id()).iv() == -7)
+                                                       || ((Rechit.id()).iu() == 2 && (Rechit.id()).iv() == -6)))
+                  isAMergedCell=true;
+                if(isAMergedCell)continue;
+
+
                 HighGain_LowGain_2D[type]->Fill(Rechit.energyLow(),Rechit.energyHigh());
 		HighGain_LowGain_2D_skiroc[skiroc_chip][type]->Fill(Rechit.energyLow(),Rechit.energyHigh());
 		HighGain_LowGain_2D_chan[skiroc_chip][chan]->Fill(Rechit.energyLow(),Rechit.energyHigh());
@@ -353,6 +363,14 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 	// now plot histograms after subtracting common mode
 	for(auto Rechit : *Rechits){
 	  int type = (Rechit.id()).cellType();
+	  bool isAMergedCell=false;
+	  if(((Rechit.id()).cellType() == 3) && (((Rechit.id()).iu() == -4 && (Rechit.id()).iv() == 6)
+						 || ((Rechit.id()).iu() == -2 && (Rechit.id()).iv() == 6)
+						 || ((Rechit.id()).iu() == 4 && (Rechit.id()).iv() == -7)
+						 || ((Rechit.id()).iu() == 2 && (Rechit.id()).iv() == -6)))
+	    isAMergedCell=true;
+	  if(isAMergedCell)continue;
+
 	  HighGain_LowGain_2D_commonmode_subtracted[type]->Fill(Rechit.energyLow()-commonmode_LG,
 								Rechit.energyHigh()-commonmode);
 	}
