@@ -117,8 +117,8 @@ private:
         TH2F *HighGain_LowGain_2D[NTYPES]; 
         TH2F *HighGain_LowGain_2D_skiroc[NCHIPS][NTYPES]; 
         TH2F *HighGain_LowGain_2D_chan[NCHIPS][NCHANS]; 
-        TH2F *HighGain_LowGain_2D_commonmode_subtracted[NTYPES]; 
-        TH2F *HighGain_LowGain_2D_sum7cellEnergy; 
+        TH2F *HighGain_LowGain_2D_cmremoved_skiroc[NCHIPS][NTYPES]; 
+        TH2F *HighGain_LowGain_2D_cmremoved_chan[NCHIPS][NCHANS]; 
    
         TH2F *h_NhitVsTotEnergy, *h_NhitVsClusterEnergy, *h_ClusterEnergyVsTotEnergy;
 
@@ -194,30 +194,33 @@ Layer_Sum_Analyzer::Layer_Sum_Analyzer(const edm::ParameterSet& iConfig)
 
 
 	for(int it = 0; it < NTYPES; it++){
-	  stringstream name1, name2;
+	  stringstream name1;
 	  name1 << "HighGain_LowGain_2D_type" << it;
 	  HighGain_LowGain_2D[it] = fs->make<TH2F>(name1.str().c_str(), name1.str().c_str(),4000,0,4000,4000,0,4000);
-	  name2 << "HighGain_LowGain_2D_commonmode_subtracted_type" << it;
-	  HighGain_LowGain_2D_commonmode_subtracted[it] = fs->make<TH2F>(name2.str().c_str(), name2.str().c_str(),
-									 4000,0,4000,4000,0,4000);
-
 	} // end loop over cell types
-	stringstream name3;
-	name3 << "HighGain_LowGain_2D_sum7cellEnergy";
-	HighGain_LowGain_2D_sum7cellEnergy = fs->make<TH2F>(name3.str().c_str(), name3.str().c_str(),
-							    4000,0,4000,15010,-10,15000);
+
 
 	for(int is = 0; is < NCHIPS; is++){
-	  for(int it = 0; it < NTYPES; it++){
+	  for(int it = 0; it < NTYPES; it++){	
 	    stringstream name1;
 	    name1 << "HighGain_LowGain_2D_skiroc" << is << Form("%02i",it);	    
 	    HighGain_LowGain_2D_skiroc[is][it] = fs->make<TH2F>(name1.str().c_str(), name1.str().c_str(),4000,0,4000,4000,0,4000);		  
+
+	    stringstream name2;
+	    name2 << "HighGain_LowGain_2D_cmremoved_skiroc" << is << Form("%02i",it);	    
+	    HighGain_LowGain_2D_cmremoved_skiroc[is][it] = fs->make<TH2F>(name2.str().c_str(), name2.str().c_str(),4000,0,4000,4000,0,4000);  
+
 	  } // end of loop over types
 
 	  for(int ic = 0; ic < NCHANS; ic++){
+	    stringstream name1;
+	    name1 << "HighGain_LowGain_2D_chan" << is << Form("%02i",ic);	    
+	    HighGain_LowGain_2D_chan[is][ic] = fs->make<TH2F>(name1.str().c_str(), name1.str().c_str(),4000,0,4000,4000,0,4000);	
+
 	    stringstream name2;
-	    name2 << "HighGain_LowGain_2D_chan" << is << Form("%02i",ic);	    
-	    HighGain_LowGain_2D_chan[is][ic] = fs->make<TH2F>(name2.str().c_str(), name2.str().c_str(),4000,0,4000,4000,0,4000);	
+	    name2 << "HighGain_LowGain_2D_cmremoved_chan" << is << Form("%02i",ic);	    
+	    HighGain_LowGain_2D_cmremoved_chan[is][ic] = fs->make<TH2F>(name2.str().c_str(), name2.str().c_str(),4000,0,4000,4000,0,4000);	
+
 	  } // end of loop over channels, 0-63
 	} // end loop over skirocs, 0-2
 
@@ -300,7 +303,7 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 	for(auto Rechit : *Rechits){
 
 		//getting electronics ID
-		uint32_t EID = essource_.emap_.detId2eid(Rechit.id());
+	        uint32_t EID = essource_.emap_.detId2eid(Rechit.id());
 		HGCalTBElectronicsId eid(EID);
 		
 		//getting X and Y coordinates
@@ -362,7 +365,14 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 
 	// now plot histograms after subtracting common mode
 	for(auto Rechit : *Rechits){
+
+	  uint32_t EID = essource_.emap_.detId2eid(Rechit.id());
+	  HGCalTBElectronicsId eid(EID);
+
 	  int type = (Rechit.id()).cellType();
+	  int skiroc_chip = eid.iskiroc()-1;
+	  int chan = eid.ichan();
+
 	  bool isAMergedCell=false;
 	  if(((Rechit.id()).cellType() == 3) && (((Rechit.id()).iu() == -4 && (Rechit.id()).iv() == 6)
 						 || ((Rechit.id()).iu() == -2 && (Rechit.id()).iv() == 6)
@@ -371,8 +381,11 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 	    isAMergedCell=true;
 	  if(isAMergedCell)continue;
 
-	  HighGain_LowGain_2D_commonmode_subtracted[type]->Fill(Rechit.energyLow()-commonmode_LG,
-								Rechit.energyHigh()-commonmode);
+
+	  HighGain_LowGain_2D_cmremoved_skiroc[skiroc_chip][type]->Fill(Rechit.energyLow()-commonmode_LG,
+								   Rechit.energyHigh()-commonmode);
+	  HighGain_LowGain_2D_cmremoved_chan[skiroc_chip][chan]->Fill(Rechit.energyLow()-commonmode_LG,
+								   Rechit.energyHigh()-commonmode);
 	}
 
 
@@ -380,11 +393,11 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 	event.getByToken(HGCalTBRecHitCollection_, Rechits1);
 
 	// looping over each rechit to fill histogram
-	double allcells_sum, sevencells_sum, LG_sevencells_sum,nineteencells_sum, radius;
-	allcells_sum = sevencells_sum = LG_sevencells_sum = nineteencells_sum = radius = 0.;
+	double allcells_sum, sevencells_sum, nineteencells_sum, radius;
+	allcells_sum = sevencells_sum = nineteencells_sum = radius = 0.;
         double x_tmp = 0., y_tmp = 0.;  
-	int num, sevennum, LG_sevennum, nineteennum;
-	num = sevennum = LG_sevennum = nineteennum = 0;
+	int num, sevennum, nineteennum;
+	num = sevennum = nineteennum = 0;
 	float totEnergy=0.0;
 	
 	for(auto Rechit1 : *Rechits1){
@@ -411,11 +424,6 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 			sevennum++;
 		}
 
-		// low-gain
-		if((radius < maxdist && LG_sevennum < 7) && ((Rechit1.energyLow() - commonmode_LG)/ADCtoMIP[LAYER] > LGCMTHRESHOLD)){
-		  LG_sevencells_sum += (Rechit1.energyLow() - commonmode_LG) / ADCtoMIP[LAYER];
-		  LG_sevennum++;
-		}
 
 		if((radius < 1.95 * maxdist && nineteennum < 19) && ((Rechit1.energyHigh() - commonmode)/ADCtoMIP[LAYER] > CMTHRESHOLD)){
 
@@ -441,7 +449,6 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 	AllCells[LAYER][EVENT] = allcells_sum;
 	SevenCells[LAYER][EVENT] = sevencells_sum;
 	NineteenCells[LAYER][EVENT] = nineteencells_sum;	
-	HighGain_LowGain_2D_sum7cellEnergy->Fill(LG_sevencells_sum,sevencells_sum);
 
         if(nineteennum> 1 &&  nineteencells_sum > 0) X_Layer[LAYER][EVENT] = x_tmp/nineteencells_sum ;  
         if(nineteennum> 1 &&  nineteencells_sum > 0) Y_Layer[LAYER][EVENT] = y_tmp/nineteencells_sum ;
