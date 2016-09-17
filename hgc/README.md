@@ -7,6 +7,7 @@ cmsrel CMSSW_8_0_1
 cd CMSSW_8_0_1/src
 git cms-init
 git clone https://github.com/CMS-HGCAL/TestBeam HGCal/
+curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/plugin/Layer_Sum_Analyzer.cc -o HGCal/Reco/plugins/Layer_Sum_Analyzer.cc
 cd HGCal
 git checkout FNAL_TB_16Layers
 git pull
@@ -27,9 +28,32 @@ Change the two pedestal files to Ped_HighGain_L1.txt and Ped_LowGain_L1.txt
 3) Open Geometry/interface/HGCalTBSpillParameters.h
 ---> Change Spill to as many you wish to analyze(Number of events in the file should be < Events_Per_Spills*Number_Of_Spills)
 
+ 
 ### Compile 
 
 scram b -j32
+
+### To run the job
+```
+curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/python/test_cfg.py -o test_cfg.py
+cmsRun test_cfg.py PARTICLE=electron ENERGY=250GeV RUNNUMBER=666
+```
+### If you want to run on many text files at the same time
+
+```
+cd CMSSW_8_0_1/src/
+mkdir -p data/electron/250GeV
+cd data/electron/250GeV
+```
+Now you could copy text files over to this area and go back to the original directory to launch your job
+
+```
+cd CMSSW_8_0_1/src/HGCal
+curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/python/runAll.py -o runAll.py
+curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/shellscript/inputRuns.sh -o inputRuns.sh
+chmod 755 inputRuns.sh
+python runAll.py electron 250GeV
+```
 
 ### Meaning of each analyzer
 
