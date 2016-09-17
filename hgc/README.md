@@ -26,7 +26,7 @@ Find out the beam type and beam energy your runs correspond to, for example, if 
 create a directory under CMSSW_8_0_1/src
 
 ```
-cd CMSSW_8_0_1/src/
+cd ../../../
 mkdir -p data/electron/250GeV
 cd data/electron/250GeV
 ln -s xxxx .
