@@ -21,7 +21,7 @@ curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/plugi
 ### Change default parameters
 
 1) Open Reco/python/hgcaltbrechitproducer_cfi.py
-Change the two pedestal files to Ped_HighGain_L1.txt and Ped_LowGain_L1.txt
+Change the two pedestal files to Ped_LowGain_L1.txt and Ped_HighGain_L1.txt
 
 2) Open Geometry/interface/HGCalTBGeometryParameters.h
 ---> Change MAXLAYERs to 1 and MAXSKIROCs to 2
