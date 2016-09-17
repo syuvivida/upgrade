@@ -1,6 +1,8 @@
 #include <fstream>
 #include <iostream>
 #include <TH2.h>
+#include <TH1.h>
+#include <TProfile.h>
 #include <TF1.h>
 #include <string>
 #include <TFitResult.h>
@@ -74,23 +76,26 @@ void cutoff(double* locutoff, double* hicutoff, const TFitResult& low, const TFi
 }
 
 
-void computeSaturation(string inputFile, bool profile,string histoPrefix="HighGain_LowGain_2D_type")
+void computeSaturation(string inputFile, string histoPrefix="HighGain_LowGain_2D_lct")
 {
   bool hasType=false;
-  if(histoPrefix.find("type")!=std::string::npos)hasType=true;
-  if(histoPrefix.find("skiroc")!=std::string::npos)hasType=true;
-  const int NTYPES= hasType? 5:1;
+  if(histoPrefix.find("lct")!=std::string::npos)hasType=true;
 
-  TH2F* h2D[NTYPES];
+  const int NTYPES= hasType? 6:64;
+  const int NLAYERS=8;
+  const int NCHIPS=2;
+
+  TH1* h2D[NLAYERS][NCHIPS][NTYPES];
+
   TFile *f1 = TFile::Open(inputFile.data());
 
   TF1* flo = new TF1("flo","[0]*x+[1]");
   TF1* fhi = new TF1("fhi","[0]*x+[1]");
   TString prefix=gSystem->GetFromPipe(Form("file=%s; test=${file##*/}; test2=${test%%_HGC*}; echo \"${test2}\"",inputFile.data()));
 
-  if(profile)prefix = "profile_" + prefix;
+  prefix = "profile_" + prefix;
 
-  TString runNumber=gSystem->GetFromPipe(Form("file=%s; test=${file##*_}; test2=${test%%.root*}; echo \"${test2}\"",inputFile.data()));
+  TString runNumber=gSystem->GetFromPipe(Form("file=%s; test2=${file%%_Reco.root*}; test=${test2##*_}; echo \"${test}\"",inputFile.data()));
 
   string runNumber_string = runNumber.Data();
   string prefix_string = prefix.Data();
@@ -104,27 +109,28 @@ void computeSaturation(string inputFile, bool profile,string histoPrefix="HighGa
   ofstream fout_slope;
   fout_slope.open(Form("slope_%s_%s.dat",prefix.Data(),histoPrefix.data()),ios::out | ios::app);
 
+  for(int il=0; il< NLAYERS; il++){
+    for(int ic=0; ic< NCHIPS; ic++){
+      for(int it=0; it< NTYPES; it++){
 
-  for(int it=0; it< NTYPES; it++)
-    {  
-      if(it==3)continue;
+	cout << "runNumber = " << runNumber << "   layers = " << il+1 << ", skiroc chip " << ic+1 << " it = " << it << endl;
 
-      cout << "runNumber = " << runNumber << " it = " << it << endl;
-
-      h2D[it] = (TH2F*)(f1->FindObjectAny(Form("%s%d",histoPrefix.data(),it)));
-      h2D[it] ->SetName(Form("h2D%d",it));
+      h2D[il][ic][it] = (TH1*)(f1->FindObjectAny(Form("%s%d%02i%02i",histoPrefix.data(),il+1,ic+1,it)));
+      h2D[il][ic][it] ->SetName(Form("h2D%d%02i%02i",il,ic,it));
       double par[4];
       double parerr[4];
       TFitResultPtr fitptr_lo;
       TFitResultPtr fitptr_hi;
-      if(!profile)
+      bool ispf = h2D[il][ic][it]->InheritsFrom(TProfile::Class());
+
+      if(ispf)
 	{
-	  fitptr_lo=h2D[it] ->Fit("flo","S","",0,150); 
-	  fitptr_hi=h2D[it] ->Fit("fhi","S","",250,400); 
+	  fitptr_lo=h2D[il][ic][it] ->Fit("flo","S","",0,150); 
+	  fitptr_hi=h2D[il][ic][it] ->Fit("fhi","S","",250,400); 
 	}
       else
 	{
-	  TProfile* pfx = h2D[it]->ProfileX();
+	  TProfile* pfx = ((TH2F*)h2D[il][ic][it])->ProfileX();
 	  fitptr_lo=pfx ->Fit("flo","S","",0,150); 
 	  fitptr_hi=pfx ->Fit("fhi","S","",250,400); 
 	}
@@ -144,9 +150,11 @@ void computeSaturation(string inputFile, bool profile,string histoPrefix="HighGa
       double slope = flo->GetParameter(0);
       double slopeerr = flo->GetParError(0);
 
-      fout_slope << runNumber << " " << it << " " << slope << " " << slopeerr << endl;
-
-    } // loop over number of cell types
+      fout_slope << runNumber << " " << il << " " << ic << " " << it << " " << slope << " " << slopeerr << endl;
+      
+      } // loop over number of cell types
+    } // end of loop over skiroc chips
+  } // end of loop over layers
   fout.close();
   fout_slope.close();
   f1->Close();
