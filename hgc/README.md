@@ -17,7 +17,7 @@ scramv1 b -j 8
 ```
 ### To run the code
 ```
-cd HGCalc
+cd HGCal
 curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layers_8/hgc/python/test_cfg.py -o test_cfg.py
 cmsRun test_cfg.py nSpills=15 chainSequence=4 pedestalsHighGain=CondObjects/data/Ped_HighGain_L8.txt pedestalsLowGain=CondObjects/data/Ped_LowGain_L8.txt runNumber=1296 runType=HGCRun particle=electron energy=250GeV
 ```
