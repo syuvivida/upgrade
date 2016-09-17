@@ -11,9 +11,10 @@ curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layers_8/hgc/plug
 
 
 ### Compile 
+```
 cmsenv
 scramv1 b -j 8
-
+```
 ### To run the code
 ```
 cd HGCalc
