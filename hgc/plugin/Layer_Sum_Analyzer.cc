@@ -308,7 +308,7 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 	  int type = (Rechit.id()).cellType();
 	  int n_layer = (Rechit.id()).layer()-1;
 	  int skiroc_chip = (eid.iskiroc()-1)%2;
-	  int chan = eid.ichan();
+	  //	  int chan = eid.ichan();
 	  HighGain_LowGain_2D_cmremoved_lct[n_layer][skiroc_chip][type]->Fill(Rechit.energyLow()-commonmode_LG,
 									      Rechit.energyHigh()-commonmode);
 // 	  pf_HighGain_LowGain_2D_cmremoved_lcc[n_layer][skiroc_chip][chan]->Fill(Rechit.energyLow()-commonmode_LG,
