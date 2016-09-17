@@ -37,6 +37,7 @@ where xxxx is the text files in the dataFolder "/afs/cern.ch/work/r/rslu/public/
 Then you could run on all text files in the same directory via the following way
 
 ```
+cd ../../../
 cd CMSSW_8_0_1/src/HGCal
 curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layers_8/hgc/python/runAll.py -o runAll.py
 curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layers_8/hgc/shellscript/inputRuns.sh -o inputRuns.sh
