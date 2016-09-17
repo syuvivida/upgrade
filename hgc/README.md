@@ -4,32 +4,20 @@ Go to a cms evironment enabled area(lxplus)
 
 ```
 cmsrel CMSSW_8_0_1
-cd CMSSW_8_0_1/src
-git cms-init
-git clone https://github.com/CMS-HGCAL/TestBeam HGCal/
-cd HGCal
-git checkout FNAL_TB_16Layers
-git pull
-rm -f RawToDigi/plugins/DigiPlotter_New.cc
-cp ~rchatter/public/Ped_*Gain_L*.txt CondObjects/data
-cp ~rchatter/public/Layer_Sum_Analyzer.cc Reco/plugins
-cp ~rchatter/public/test_cfg.py .
+cd CMSSW_8_0_1/src/
+git clone git@github.com:CMS-HGCAL/TestBeam.git HGCal
 ```
 
-### Change default parameters
-
-1) Open Reco/python/hgcaltbrechitproducer_cfi.py
-Change the two pedestal files to Ped_HighGain_L1.txt and Ped_LowGain_L1.txt
-
-2) Open Geometry/interface/HGCalTBGeometryParameters.h
----> Change MAXLAYERs to 1 and MAXSKIROCs to 2
-
-3) Open Geometry/interface/HGCalTBSpillParameters.h
----> Change Spill to as many you wish to analyze(Number of events in the file should be < Events_Per_Spills*Number_Of_Spills)
 
 ### Compile 
 
-scram b -j32
+scramv1 b -j 8
+
+### To run the code
+
+cd HGCalc
+
+msRun test_cfg.py nSpills=15 chainSequence=4 pedestalsHighGain=CondObjects/data/Ped_HighGain_L8.txt pedestalsLowGain=CondObjects/data/Ped_LowGain_L8.txt runNumber=1058 runType=HGCRun particle=electron energy=250GeV
 
 ### Meaning of each analyzer
 
@@ -43,4 +31,6 @@ scram b -j32
 
 Can activate all 3 at the same time.
 
-The output root file produced is HGC_Output_Reco.root
+For now, we only activate 3) to reduce the running time
+
+
