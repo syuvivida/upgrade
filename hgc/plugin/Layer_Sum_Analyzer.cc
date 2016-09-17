@@ -116,7 +116,7 @@ private:
         TH2F *HighGain_LowGain_2D_cmremoved_lct[MAXLAYERS][NCHIPS][NTYPES];
 
         TProfile *pf_HighGain_LowGain_2D_lcc[MAXLAYERS][NCHIPS][NCHANS];
-        TProfile *pf_HighGain_LowGain_2D_cmremoved_lcc[MAXLAYERS][NCHIPS][NCHANS];
+//         TProfile *pf_HighGain_LowGain_2D_cmremoved_lcc[MAXLAYERS][NCHIPS][NCHANS];
 
 	int SPILL = 0, EVENT = 0, LAYER = 0;
 
@@ -178,9 +178,9 @@ Layer_Sum_Analyzer::Layer_Sum_Analyzer(const edm::ParameterSet& iConfig)
 		    name3 << "pf_HighGain_LowGain_2D_lcc" << layer+1 << Form("%02i",ik+1) << Form("%02i",ij);
 		    pf_HighGain_LowGain_2D_lcc[layer][ik][ij] = fs->make<TProfile>(name3.str().c_str(), name3.str().c_str(),4000,0,4000);
 
-		    stringstream name4;
-		    name4 << "pf_HighGain_LowGain_2D_cmremoved_lcc" << layer+1 << Form("%02i",ik+1) << Form("%02i",ij);
-		    pf_HighGain_LowGain_2D_cmremoved_lcc[layer][ik][ij] = fs->make<TProfile>(name4.str().c_str(), name4.str().c_str(),4000,0,4000);
+// 		    stringstream name4;
+// 		    name4 << "pf_HighGain_LowGain_2D_cmremoved_lcc" << layer+1 << Form("%02i",ik+1) << Form("%02i",ij);
+// 		    pf_HighGain_LowGain_2D_cmremoved_lcc[layer][ik][ij] = fs->make<TProfile>(name4.str().c_str(), name4.str().c_str(),4000,0,4000);
 
 		  } // end of loop over channels, 0-63                                                                                                                                
 		  for(int im= 0; im < NTYPES; im++){
@@ -311,8 +311,8 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 	  int chan = eid.ichan();
 	  HighGain_LowGain_2D_cmremoved_lct[n_layer][skiroc_chip][type]->Fill(Rechit.energyLow()-commonmode_LG,
 									      Rechit.energyHigh()-commonmode);
-	  pf_HighGain_LowGain_2D_cmremoved_lcc[n_layer][skiroc_chip][chan]->Fill(Rechit.energyLow()-commonmode_LG,
-										 Rechit.energyHigh()-commonmode);
+// 	  pf_HighGain_LowGain_2D_cmremoved_lcc[n_layer][skiroc_chip][chan]->Fill(Rechit.energyLow()-commonmode_LG,
+// 										 Rechit.energyHigh()-commonmode);
 
 	}
 
