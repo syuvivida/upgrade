@@ -113,7 +113,7 @@ private:
 
 
         TH2F *HighGain_LowGain_2D_lct[MAXLAYERS][NCHIPS][NTYPES];
-        TH2F *HighGain_LowGain_2D_cmremoved_lct[MAXLAYERS][NCHIPS][NTYPES];
+        TProfile *pf_HighGain_LowGain_2D_cmremoved_lct[MAXLAYERS][NCHIPS][NTYPES];
 
         TProfile *pf_HighGain_LowGain_2D_lcc[MAXLAYERS][NCHIPS][NCHANS];
 //         TProfile *pf_HighGain_LowGain_2D_cmremoved_lcc[MAXLAYERS][NCHIPS][NCHANS];
@@ -188,8 +188,8 @@ Layer_Sum_Analyzer::Layer_Sum_Analyzer(const edm::ParameterSet& iConfig)
 		    name3 << "HighGain_LowGain_2D_lct" << layer+1 << Form("%02i",ik+1) << Form("%02i",im);
 		    HighGain_LowGain_2D_lct[layer][ik][im] = fs->make<TH2F>(name3.str().c_str(), name3.str().c_str(),4000,0,4000,4000,0,4000);
 		    stringstream name4;
-		    name4 << "HighGain_LowGain_2D_cmremoved_lct" << layer+1 << Form("%02i",ik+1) << Form("%02i",im);
-		    HighGain_LowGain_2D_cmremoved_lct[layer][ik][im] = fs->make<TH2F>(name4.str().c_str(), name4.str().c_str(),4000,0,4000,4000,0,4000);
+		    name4 << "pf_HighGain_LowGain_2D_cmremoved_lct" << layer+1 << Form("%02i",ik+1) << Form("%02i",im);
+		    pf_HighGain_LowGain_2D_cmremoved_lct[layer][ik][im] = fs->make<TProfile>(name4.str().c_str(), name4.str().c_str(),4000,0,4000);
 
 		  } // end of loop over types                                                                                                                                         
 		} // end loop over skirocs   
@@ -309,7 +309,7 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 	  int n_layer = (Rechit.id()).layer()-1;
 	  int skiroc_chip = (eid.iskiroc()-1)%2;
 	  //	  int chan = eid.ichan();
-	  HighGain_LowGain_2D_cmremoved_lct[n_layer][skiroc_chip][type]->Fill(Rechit.energyLow()-commonmode_LG,
+	  pf_HighGain_LowGain_2D_cmremoved_lct[n_layer][skiroc_chip][type]->Fill(Rechit.energyLow()-commonmode_LG,
 									      Rechit.energyHigh()-commonmode);
 // 	  pf_HighGain_LowGain_2D_cmremoved_lcc[n_layer][skiroc_chip][chan]->Fill(Rechit.energyLow()-commonmode_LG,
 // 										 Rechit.energyHigh()-commonmode);
