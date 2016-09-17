@@ -11,7 +11,7 @@ fi
 
 dirName=$1
 
-ls -1 $dirName/*txt | awk '{print $1}' > temp.txt
+ls -f -1 $dirName/ | grep -a txt | awk '{print $1}' > temp.txt
 
 lastfile=`cat temp.txt | wc -l`
 echo "There are "$lastfile" input files"
@@ -26,4 +26,4 @@ do
   echo $test >> runs  
 done
 
-sed -i -e 's/.txt//g' -e 's/HGCRun_Output_000//g' runs
+sed -i -e 's/.txt//g' -e 's/HGCRun_Output_000//g' -e 's/HGCRun_Output_00//g' -e 's/HGCRun_Output_0//g' runs

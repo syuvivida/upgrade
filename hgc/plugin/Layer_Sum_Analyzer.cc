@@ -14,6 +14,7 @@
 #include <memory>
 #include <iostream>
 #include "TH2Poly.h"
+#include "TProfile.h"
 #include "TH1F.h"
 #include "TF1.h"
 #include <sstream>
@@ -40,14 +41,11 @@
 #include "HGCal/Geometry/interface/HGCalTBCellVertices.h"
 #include "HGCal/Geometry/interface/HGCalTBCellParameters.h"
 #include "HGCal/Geometry/interface/HGCalTBSpillParameters.h"
-#include "HGCal/Reco/interface/Clustering.h"
-#include "HGCal/Reco/interface/ClusteringHelper.h"
-#include "HGCal/DataFormats/interface/MyHGCalRecHit.h"
 
 // chooses which particle to look at. Inverts threshold filtering.
 // if nothing is selected, electrons are the default
 
-double Layer_Z[16]  = {1.2,2.,3.5,4.3,5.8,6.3,8.7,9.5,11.4,12.2,13.8,14.6,16.6,17.4,20.,20.8};
+double Layer_Z[16]  = {1.2, 2., 3.5, 4.3, 5.8, 6.3, 8.7, 9.5, 11.4, 12.2, 13.8, 14.6, 16.6, 17.4, 20., 20.8};
 
 double ADCtoMIP[16] = {1.};
 
@@ -62,7 +60,7 @@ double LayerWeight[16] = {1.};
 
 double LayerSumWeight = 1.;
 const int CMTHRESHOLD = 30;// anything less than this value is added to the commonmode sum
-const int LGCMTHRESHOLD =3; // common-mode noise for low-gain, needs to be double checked (Eiko)
+const int LGCMTHRESHOLD =3; // common-mode noise for low-gain (need to be double checked, Eiko)
 
 // applied to all layers sum after commonmode subtraction and the ADC to MIP conversion
 const double ALLCELLS_THRESHOLD = 50.;
@@ -72,9 +70,10 @@ const double PION_ALLCELLS_THRESHOLD = 15.;
 const double PION_7CELLS_THRESHOLD = -100.;
 const double PION_19CELLS_THRESHOLD = -100.;
 
-const int NTYPES=5;
-const int NCHIPS=2;
-const int NCHANS=64;
+const int NTYPES=6;                                           
+const int NCHIPS=2;                                           
+const int NCHANS=64;                                          
+
 using namespace std;
 
 
@@ -89,10 +88,9 @@ public:
 
 private:
 
-        bool ELECTRONS;// uses > *CELLS_THRESHOLD
-        bool PIONS;// uses > PION_*CELLS_THRESHOLD and < *CELLS_THRESHOLD
-
-	virtual void beginJob() override;
+        bool ELECTRONS;
+        bool PIONS;
+ 	virtual void beginJob() override;
 	void analyze(const edm::Event& , const edm::EventSetup&) override;
 	virtual void endJob() override;
 
@@ -101,44 +99,35 @@ private:
 	struct {
 		HGCalElectronicsMap emap_;
 	} essource_;
-	string mapfile_ = "HGCal/CondObjects/data/map_FNAL_SB2_Layer16.txt";
+	string mapfile_ = "HGCal/CondObjects/data/map_CERN_8Layers_Sept2016.txt";
 	int sensorsize = 128;
-        std::vector<std::pair<double, double>> CellXY;
-        std::pair<double, double> CellCentreXY;
+	std::vector<std::pair<double, double>> CellXY;
+	std::pair<double, double> CellCentreXY;
 	HGCalTBCellVertices TheCell;
 	double maxdist = (1 + sqrt (3) / 2) * HGCAL_TB_CELL::FULL_CELL_SIDE;
 	TH1F *h_sum_layer[MAXLAYERS], *h_layer_seven[MAXLAYERS], *h_layer_nineteen[MAXLAYERS], *h_sum_all, *h_seven_all, *h_nineteen_all;
-        TH1F *h_x_layer[MAXLAYERS], *h_y_layer[MAXLAYERS];
-        TH2F *h_x_y_layer[MAXLAYERS];
-        
-	TH1F *h_layer_clusterEnergy[MAXLAYERS], *h_clusterEnergy_all, *h_2ndclusterEnergy_all, *h_clusterEnergyLow_all, *h_clusterSize_all, *h_nclusters_all, *h_minDistance;
-  
-        // added by Eiko
-        TH2F *HighGain_LowGain_2D[NTYPES]; 
-        TH2F *HighGain_LowGain_2D_skiroc[NCHIPS][NTYPES]; 
-        TH2F *HighGain_LowGain_2D_chan[NCHIPS][NCHANS]; 
-        TH2F *HighGain_LowGain_2D_cmremoved_skiroc[NCHIPS][NTYPES]; 
-        TH2F *HighGain_LowGain_2D_cmremoved_chan[NCHIPS][NCHANS]; 
-   
-        TH2F *h_NhitVsTotEnergy, *h_NhitVsClusterEnergy, *h_ClusterEnergyVsTotEnergy;
+	TH1F *h_x_layer[MAXLAYERS], *h_y_layer[MAXLAYERS];
+	TH2F *h_x_y_layer[MAXLAYERS];
+
+       // added by Eiko and Vieri                                                                                                                           
+
+
+        TH2F *HighGain_LowGain_2D_lct[MAXLAYERS][NCHIPS][NTYPES];
+        TH2F *HighGain_LowGain_2D_cmremoved_lct[MAXLAYERS][NCHIPS][NTYPES];
+
+        TProfile *pf_HighGain_LowGain_2D_lcc[MAXLAYERS][NCHIPS][NCHANS];
+        TProfile *pf_HighGain_LowGain_2D_cmremoved_lcc[MAXLAYERS][NCHIPS][NCHANS];
 
 	int SPILL = 0, EVENT = 0, LAYER = 0;
-	double AllCells[MAXLAYERS][EVENTSPERSPILL * SPILLS] = {{0.}};
-	double SevenCells[MAXLAYERS][EVENTSPERSPILL * SPILLS] = {{0.}};
-	double NineteenCells[MAXLAYERS][EVENTSPERSPILL * SPILLS] = {{0.}};
-        double X_Layer[MAXLAYERS][EVENTSPERSPILL * SPILLS] = {{0.}};
-        double Y_Layer[MAXLAYERS][EVENTSPERSPILL * SPILLS] = {{0.}};
-        double Time_Stamp[EVENTSPERSPILL * SPILLS] = {0.};
-        double Delta_Time_Stamp[EVENTSPERSPILL * SPILLS] = {0.};  
-        double Time_Temp = 0.;
 
-	clusteringParameterSetting m_clusteringParameterSetting;
-	Clustering *clusteringAlgo;
-	std::vector<MyHGCalRecHit*> rechitVec;
-	SortClusterByEnergy<HGCalTBCluster2D,HGCalTBCluster2D> sorter;
-	SortClusterByEnergy<MyHGCalRecHit,MyHGCalRecHit> hitSorter;
-	DistanceBetweenCluster<HGCalTBCluster2D,HGCalTBCluster2D> distCluster;
-
+	map<int, double> AllCells[MAXLAYERS];
+	map<int, double> SevenCells[MAXLAYERS];
+	map<int, double> NineteenCells[MAXLAYERS];
+	map<int, double> X_Layer[MAXLAYERS];
+	map<int, double> Y_Layer[MAXLAYERS];
+	map<int, double> Time_Stamp;
+	map<int, double> Delta_Time_Stamp;
+	double Time_Temp = 0.;
 };
 
 
@@ -146,6 +135,7 @@ private:
 Layer_Sum_Analyzer::Layer_Sum_Analyzer(const edm::ParameterSet& iConfig)
 {
 
+  // check if it's an electron or pion beam
   if(iConfig.getParameter<std::string>("particleType")=="electron")
     {
       ELECTRONS=true;
@@ -166,101 +156,58 @@ Layer_Sum_Analyzer::Layer_Sum_Analyzer(const edm::ParameterSet& iConfig)
 	HGCalTBRecHitCollection_ = consumes<HGCalTBRecHitCollection>(iConfig.getParameter<edm::InputTag>("HGCALTBRECHITS"));
 
 	//booking the histos
-	for(int layer = 0; layer < MAXLAYERS; layer++){
-		stringstream name, sevenname, nineteenname, Xname, Yname, X_Y_name, clusterEnergyname;
+	for(int layer = 0; layer < MAXLAYERS; layer++) {
+		stringstream name, sevenname, nineteenname, Xname, Yname, X_Y_name;
 		name << "AllCells_Sum_Layer" << layer + 1;
 		sevenname << "Cells7_Sum_Layer" << layer + 1;
 		nineteenname << "Cells19_Sum_Layer" << layer + 1;
-                Xname << "X_Layer" << layer + 1;
-                Yname << "Y_Layer" << layer + 1;
-                X_Y_name<<"X_Y_Layer"<< layer + 1;
-                clusterEnergyname << "clusterEnergy" << layer + 1;
+		Xname << "X_Layer" << layer + 1;
+		Yname << "Y_Layer" << layer + 1;
+		X_Y_name << "X_Y_Layer" << layer + 1;
 
-		h_sum_layer[layer] = fs->make<TH1F>(name.str().c_str(), name.str().c_str(), 622, -10, 612);
-		h_layer_seven[layer] = fs->make<TH1F>(sevenname.str().c_str(), sevenname.str().c_str(), 622, -10, 612);
-		h_layer_nineteen[layer] = fs->make<TH1F>(nineteenname.str().c_str(), nineteenname.str().c_str(), 622, -10, 612);
-                h_x_layer[layer] = fs->make<TH1F>(Xname.str().c_str(), Xname.str().c_str(),2000,-10.,10. );
-                h_y_layer[layer] = fs->make<TH1F>(Yname.str().c_str(), Yname.str().c_str(),2000,-10.,10. );
-                h_x_y_layer[layer] = fs->make<TH2F>(X_Y_name.str().c_str(), X_Y_name.str().c_str(),2000,-10.,10.,2000,-10.,10. );
-   	        h_layer_clusterEnergy[layer] = fs->make<TH1F>(clusterEnergyname.str().c_str(), clusterEnergyname.str().c_str(),2000,0.,100000. );
-	}
+		h_sum_layer[layer] = fs->make<TH1F>(name.str().c_str(), name.str().c_str(), 40010, -10, 40000);
+		h_layer_seven[layer] = fs->make<TH1F>(sevenname.str().c_str(), sevenname.str().c_str(), 40010, -10, 40000);
+		h_layer_nineteen[layer] = fs->make<TH1F>(nineteenname.str().c_str(), nineteenname.str().c_str(), 40010, -10, 40000);
+		h_x_layer[layer] = fs->make<TH1F>(Xname.str().c_str(), Xname.str().c_str(), 2000, -10., 10. );
+		h_y_layer[layer] = fs->make<TH1F>(Yname.str().c_str(), Yname.str().c_str(), 2000, -10., 10. );
+		h_x_y_layer[layer] = fs->make<TH2F>(X_Y_name.str().c_str(), X_Y_name.str().c_str(), 2000, -10., 10., 2000, -10., 10. );
+		
+		for(int ik = 0; ik < NCHIPS; ik++){
+		  for(int ij= 0; ij < NCHANS; ij++){
+		    stringstream name3;
+		    name3 << "pf_HighGain_LowGain_2D_lcc" << layer+1 << Form("%02i",ik+1) << Form("%02i",ij);
+		    pf_HighGain_LowGain_2D_lcc[layer][ik][ij] = fs->make<TProfile>(name3.str().c_str(), name3.str().c_str(),4000,0,4000);
+
+		    stringstream name4;
+		    name4 << "pf_HighGain_LowGain_2D_cmremoved_lcc" << layer+1 << Form("%02i",ik+1) << Form("%02i",ij);
+		    pf_HighGain_LowGain_2D_cmremoved_lcc[layer][ik][ij] = fs->make<TProfile>(name4.str().c_str(), name4.str().c_str(),4000,0,4000);
+
+		  } // end of loop over channels, 0-63                                                                                                                                
+		  for(int im= 0; im < NTYPES; im++){
+		    stringstream name3;
+		    name3 << "HighGain_LowGain_2D_lct" << layer+1 << Form("%02i",ik+1) << Form("%02i",im);
+		    HighGain_LowGain_2D_lct[layer][ik][im] = fs->make<TH2F>(name3.str().c_str(), name3.str().c_str(),4000,0,4000,4000,0,4000);
+		    stringstream name4;
+		    name4 << "HighGain_LowGain_2D_cmremoved_lct" << layer+1 << Form("%02i",ik+1) << Form("%02i",im);
+		    HighGain_LowGain_2D_cmremoved_lct[layer][ik][im] = fs->make<TH2F>(name4.str().c_str(), name4.str().c_str(),4000,0,4000,4000,0,4000);
+
+		  } // end of loop over types                                                                                                                                         
+		} // end loop over skirocs   
+
+	} // end of loop over layers
 
 	h_sum_all = fs->make<TH1F>("AllCells_Sum_AllLayers", "AllCells_Sum_AllLayers", 40010, -10, 40000);
-        h_sum_all->Sumw2(); 
-	h_seven_all = fs->make<TH1F>("Cells7_Sum_AllLayers", "7Cells_Sum_AllLayers", 40010, -10, 40000); 
-        h_seven_all->Sumw2();
-	h_nineteen_all = fs->make<TH1F>("Cells19_Sum_AllLayers", "19Cells_Sum_AllLayers", 40010, -10, 40000); 
-        h_nineteen_all->Sumw2();
-
-
-	for(int it = 0; it < NTYPES; it++){
-	  stringstream name1;
-	  name1 << "HighGain_LowGain_2D_type" << it;
-	  HighGain_LowGain_2D[it] = fs->make<TH2F>(name1.str().c_str(), name1.str().c_str(),4000,0,4000,4000,0,4000);
-	} // end loop over cell types
-
-
-	for(int is = 0; is < NCHIPS; is++){
-	  for(int it = 0; it < NTYPES; it++){	
-	    stringstream name1;
-	    name1 << "HighGain_LowGain_2D_skiroc" << is << Form("%02i",it);	    
-	    HighGain_LowGain_2D_skiroc[is][it] = fs->make<TH2F>(name1.str().c_str(), name1.str().c_str(),4000,0,4000,4000,0,4000);		  
-
-	    stringstream name2;
-	    name2 << "HighGain_LowGain_2D_cmremoved_skiroc" << is << Form("%02i",it);	    
-	    HighGain_LowGain_2D_cmremoved_skiroc[is][it] = fs->make<TH2F>(name2.str().c_str(), name2.str().c_str(),4000,0,4000,4000,0,4000);  
-
-	  } // end of loop over types
-
-	  for(int ic = 0; ic < NCHANS; ic++){
-	    stringstream name1;
-	    name1 << "HighGain_LowGain_2D_chan" << is << Form("%02i",ic);	    
-	    HighGain_LowGain_2D_chan[is][ic] = fs->make<TH2F>(name1.str().c_str(), name1.str().c_str(),4000,0,4000,4000,0,4000);	
-
-	    stringstream name2;
-	    name2 << "HighGain_LowGain_2D_cmremoved_chan" << is << Form("%02i",ic);	    
-	    HighGain_LowGain_2D_cmremoved_chan[is][ic] = fs->make<TH2F>(name2.str().c_str(), name2.str().c_str(),4000,0,4000,4000,0,4000);	
-
-	  } // end of loop over channels, 0-63
-	} // end loop over skirocs, 0-2
-
-	h_NhitVsClusterEnergy = fs->make<TH2F>("NhitVsClusterEnergy","NhitVsClusterEnergy",4001,-10,40000,100,0,100);
-        h_NhitVsTotEnergy = fs->make<TH2F>("NhitVsTotEnergy","NhitVsTotEnergy",4001,-10,40000,100,0,100);
-        h_ClusterEnergyVsTotEnergy = fs->make<TH2F>("ClusterEnergyVsTotEnergy","ClusterEnergyVsTotEnergy",4001,-10,40000,4001,-10,40000);
-        
-        h_clusterEnergy_all = fs->make<TH1F>("ClusterEnergy_Sum_AllLayers", "ClusterEnergy_Sum_AllLayers", 4001, -10, 40000);
-        h_clusterEnergy_all->Sumw2();
-        
-        h_clusterEnergyLow_all = fs->make<TH1F>("ClusterEnergyLow_Sum_AllLayers", "ClusterEnergyLow_Sum_AllLayers", 501, -10, 5000);
-        h_clusterEnergyLow_all->Sumw2();
-        
-        h_clusterSize_all = fs->make<TH1F>("ClusterSize_Sum_AllLayers", "ClusterSize_Sum_AllLayers", 100, 0, 100);
-        h_clusterSize_all->Sumw2();
-        
-        h_2ndclusterEnergy_all = fs->make<TH1F>("h_2ndClusterEnergy_Sum_AllLayers", "h_2ndClusterEnergy_Sum_AllLayers", 4001, -10, 40000);
-        h_2ndclusterEnergy_all->Sumw2();
-        
-        h_nclusters_all = fs->make<TH1F>("NClustersAll", "NClustersAll", 100, 0, 100);
-        h_nclusters_all->Sumw2();
-        
-        h_minDistance = fs->make<TH1F>("MinDistance", "MinDistance", 200, 0, 20);
-        h_minDistance->Sumw2();
-        
-        /*Arnaud Steen hardcoded here*/
-        m_clusteringParameterSetting.maxTransverse=1;
-        m_clusteringParameterSetting.useDistanceInsteadCellID=false;
-        m_clusteringParameterSetting.maxTransverseDistance=11.0;
-        m_clusteringParameterSetting.useEnergyToWeightPosition=false;
-        clusteringAlgo = new Clustering();
-        clusteringAlgo->SetClusteringParameterSetting(m_clusteringParameterSetting);
-						    
-
+	h_sum_all->Sumw2();
+	h_seven_all = fs->make<TH1F>("Cells7_Sum_AllLayers", "7Cells_Sum_AllLayers", 40010, -10, 40000);
+	h_seven_all->Sumw2();
+	h_nineteen_all = fs->make<TH1F>("Cells19_Sum_AllLayers", "19Cells_Sum_AllLayers", 40010, -10, 40000);
+	h_nineteen_all->Sumw2();
 }//constructor ends here
 
 
 Layer_Sum_Analyzer::~Layer_Sum_Analyzer()
 {
-        delete clusteringAlgo;
+
 	// do anything here that needs to be done at desctruction time
 	// (e.g. close files, deallocate resources etc.)
 
@@ -272,22 +219,21 @@ void
 Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setup)
 {
 
-        
-	if(((event.id()).event() - 1) % (EVENTSPERSPILL * MAXLAYERS) == 0 && (event.id()).event() != 1){
+
+	if(((event.id()).event() - 1) % (EVENTSPERSPILL * MAXLAYERS) == 0 && (event.id()).event() != 1) {
 		SPILL++;
 	}
 	LAYER = (((event.id()).event() - 1) / EVENTSPERSPILL) % MAXLAYERS;
 	EVENT = ((event.id()).event() - 1) % EVENTSPERSPILL + EVENTSPERSPILL * SPILL;
-        if(EVENT == 1){
-           Time_Temp = event.time().value();
-           Time_Stamp[EVENT] = Time_Temp;
-           Delta_Time_Stamp[EVENT] = 0.;
-          }
-        else{
-              Time_Stamp[EVENT] = event.time().value();
-              Delta_Time_Stamp[EVENT] = event.time().value() - Time_Temp;
-              Time_Temp = event.time().value();
-             }     
+	if(EVENT == 1) {
+		Time_Temp = event.time().value();
+		Time_Stamp[EVENT] = Time_Temp;
+		Delta_Time_Stamp[EVENT] = 0.;
+	} else {
+		Time_Stamp[EVENT] = event.time().value();
+		Delta_Time_Stamp[EVENT] = event.time().value() - Time_Temp;
+		Time_Temp = event.time().value();
+	}
 	//opening Rechits
 	edm::Handle<HGCalTBRecHitCollection> Rechits;
 	event.getByToken(HGCalTBRecHitCollection_, Rechits);
@@ -297,97 +243,80 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 	double commonmode, max, max_x, max_y;
 	commonmode = max = max_x = max_y = 0.;
 	int cm_num = 0;
-	double commonmode_LG = 0.;
-	int cm_num_LG = 0;
 
-	for(auto Rechit : *Rechits){
+	// added by Eiko for low gain
+	double commonmode_LG = 0.;
+        int cm_num_LG = 0;
+
+	for(auto Rechit : *Rechits) {
 
 		//getting electronics ID
-	        uint32_t EID = essource_.emap_.detId2eid(Rechit.id());
+		uint32_t EID = essource_.emap_.detId2eid(Rechit.id());
 		HGCalTBElectronicsId eid(EID);
-		
+
 		//getting X and Y coordinates
 		CellCentreXY = TheCell.GetCellCentreCoordinatesForPlots((Rechit.id()).layer(), (Rechit.id()).sensorIU(), (Rechit.id()).sensorIV(), (Rechit.id()).iu(), (Rechit.id()).iv(), sensorsize);
 		int type = (Rechit.id()).cellType();
-		int skiroc_chip = eid.iskiroc()-1;
-		int chan = eid.ichan();
+		int n_layer = (Rechit.id()).layer()-1;
+		int skiroc_chip = (eid.iskiroc()-1)%2;
+                int chan = eid.ichan();
+		//		std::cout << "n_layer = " << n_layer << "\t" << type << "\t" << skiroc_chip << "\t" << chan << std::endl;                                                    
+  
+                HighGain_LowGain_2D_lct[n_layer][skiroc_chip][type]->Fill(Rechit.energyLow(),Rechit.energyHigh());
+                pf_HighGain_LowGain_2D_lcc[n_layer][skiroc_chip][chan]->Fill(Rechit.energyLow(),Rechit.energyHigh());
+ 
+		if((Rechit.id()).cellType() != 0) continue;
 
-		bool isAMergedCell=false;
-                if(((Rechit.id()).cellType() == 3) && (((Rechit.id()).iu() == -4 && (Rechit.id()).iv() == 6)
-                                                       || ((Rechit.id()).iu() == -2 && (Rechit.id()).iv() == 6)
-                                                       || ((Rechit.id()).iu() == 4 && (Rechit.id()).iv() == -7)
-                                                       || ((Rechit.id()).iu() == 2 && (Rechit.id()).iv() == -6)))
-                  isAMergedCell=true;
-                if(isAMergedCell)continue;
-
-
-                HighGain_LowGain_2D[type]->Fill(Rechit.energyLow(),Rechit.energyHigh());
-		HighGain_LowGain_2D_skiroc[skiroc_chip][type]->Fill(Rechit.energyLow(),Rechit.energyHigh());
-		HighGain_LowGain_2D_chan[skiroc_chip][chan]->Fill(Rechit.energyLow(),Rechit.energyHigh());
-
-                if((Rechit.id()).cellType() != 0) continue;
-
-		if(FIRST){
+		if(FIRST) {
 
 			max = Rechit.energyHigh();
 			max_x = CellCentreXY.first;
 			max_y = CellCentreXY.second;
 			FIRST = 0;
 		}
-		
-		if(Rechit.energyHigh() > max){
+
+		if(Rechit.energyHigh() > max) {
 
 			max = Rechit.energyHigh();
 			max_x = CellCentreXY.first;
 			max_y = CellCentreXY.second;
 		}
 
-		if((Rechit.energyHigh())/ADCtoMIP[LAYER] <= CMTHRESHOLD){
+		if((Rechit.energyHigh()) / ADCtoMIP[LAYER] <= CMTHRESHOLD) {
 
 			commonmode += Rechit.energyHigh();
 			cm_num++;
 		}
-
-
 		if((Rechit.energyLow())/ADCtoMIP[LAYER] <= LGCMTHRESHOLD){
-		  
-			commonmode_LG += Rechit.energyLow();
-			cm_num_LG++;
-		}
-			
+
+		  commonmode_LG += Rechit.energyLow();
+		  cm_num_LG++;
+                }
+
 	}//Rechit loop ends here
 
 	commonmode /= cm_num;
-	commonmode_LG /= cm_num_LG;
+	commonmode_LG /= cm_num_LG; // added by Eiko
 	
-	// std::cout << "common mode = " << commonmode << std::endl;
-	// std::cout << "commonmode_LG = " << commonmode_LG << std::endl;
+	// std::cout << "common mode = " << commonmode << std::endl;                                                                                                            
+        // std::cout << "commonmode_LG = " << commonmode_LG << std::endl;                                                                                                       
 
-	// now plot histograms after subtracting common mode
+	//      now plot histograms after subtracting common mode                                                                                                               
 	for(auto Rechit : *Rechits){
-
 	  uint32_t EID = essource_.emap_.detId2eid(Rechit.id());
 	  HGCalTBElectronicsId eid(EID);
-
 	  int type = (Rechit.id()).cellType();
-	  int skiroc_chip = eid.iskiroc()-1;
+	  int n_layer = (Rechit.id()).layer()-1;
+	  int skiroc_chip = (eid.iskiroc()-1)%2;
 	  int chan = eid.ichan();
+	  HighGain_LowGain_2D_cmremoved_lct[n_layer][skiroc_chip][type]->Fill(Rechit.energyLow()-commonmode_LG,
+									      Rechit.energyHigh()-commonmode);
+	  pf_HighGain_LowGain_2D_cmremoved_lcc[n_layer][skiroc_chip][chan]->Fill(Rechit.energyLow()-commonmode_LG,
+										 Rechit.energyHigh()-commonmode);
 
-	  bool isAMergedCell=false;
-	  if(((Rechit.id()).cellType() == 3) && (((Rechit.id()).iu() == -4 && (Rechit.id()).iv() == 6)
-						 || ((Rechit.id()).iu() == -2 && (Rechit.id()).iv() == 6)
-						 || ((Rechit.id()).iu() == 4 && (Rechit.id()).iv() == -7)
-						 || ((Rechit.id()).iu() == 2 && (Rechit.id()).iv() == -6)))
-	    isAMergedCell=true;
-	  if(isAMergedCell)continue;
-
-
-	  HighGain_LowGain_2D_cmremoved_skiroc[skiroc_chip][type]->Fill(Rechit.energyLow()-commonmode_LG,
-								   Rechit.energyHigh()-commonmode);
-	  HighGain_LowGain_2D_cmremoved_chan[skiroc_chip][chan]->Fill(Rechit.energyLow()-commonmode_LG,
-								   Rechit.energyHigh()-commonmode);
 	}
 
+    
 
 	edm::Handle<HGCalTBRecHitCollection> Rechits1;
 	event.getByToken(HGCalTBRecHitCollection_, Rechits1);
@@ -395,13 +324,11 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 	// looping over each rechit to fill histogram
 	double allcells_sum, sevencells_sum, nineteencells_sum, radius;
 	allcells_sum = sevencells_sum = nineteencells_sum = radius = 0.;
-        double x_tmp = 0., y_tmp = 0.;  
+	double x_tmp = 0., y_tmp = 0.;
 	int num, sevennum, nineteennum;
 	num = sevennum = nineteennum = 0;
-	float totEnergy=0.0;
-	
-	for(auto Rechit1 : *Rechits1){
-				 
+	for(auto Rechit1 : *Rechits1) {
+
 		//getting electronics ID
 		uint32_t EID = essource_.emap_.detId2eid(Rechit1.id());
 		HGCalTBElectronicsId eid(EID);
@@ -409,94 +336,36 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 		//getting X and Y coordinates
 		CellCentreXY = TheCell.GetCellCentreCoordinatesForPlots((Rechit1.id()).layer(), (Rechit1.id()).sensorIU(), (Rechit1.id()).sensorIV(), (Rechit1.id()).iu(), (Rechit1.id()).iv(), sensorsize);
 
-                if((Rechit1.id()).cellType() != 0) continue;
+		if((Rechit1.id()).cellType() != 0) continue;
 
 		radius = sqrt( pow(CellCentreXY.first - max_x, 2) + pow(CellCentreXY.second - max_y, 2) );
 
-                if(((Rechit1.energyHigh() - commonmode)/ADCtoMIP[LAYER]) > CMTHRESHOLD)
-		allcells_sum += (Rechit1.energyHigh() - commonmode) / ADCtoMIP[LAYER];
+		if(((Rechit1.energyHigh() - commonmode) / ADCtoMIP[LAYER]) > CMTHRESHOLD)
+			allcells_sum += (Rechit1.energyHigh() - commonmode) / ADCtoMIP[LAYER];
 		num++;
 
-		// high-gain
-		if((radius < maxdist && sevennum < 7) && ((Rechit1.energyHigh() - commonmode)/ADCtoMIP[LAYER] > CMTHRESHOLD)){
+		if((radius < maxdist && sevennum < 7) && ((Rechit1.energyHigh() - commonmode) / ADCtoMIP[LAYER] > CMTHRESHOLD)) {
 
 			sevencells_sum += (Rechit1.energyHigh() - commonmode) / ADCtoMIP[LAYER];
 			sevennum++;
 		}
 
-
-		if((radius < 1.95 * maxdist && nineteennum < 19) && ((Rechit1.energyHigh() - commonmode)/ADCtoMIP[LAYER] > CMTHRESHOLD)){
+		if((radius < 1.95 * maxdist && nineteennum < 19) && ((Rechit1.energyHigh() - commonmode) / ADCtoMIP[LAYER] > CMTHRESHOLD)) {
 
 //			nineteencells_sum += (LayerWeight[LAYER]*(Rechit1.energyHigh() - commonmode))/ ADCtoMIP[LAYER];
-                        nineteencells_sum += ((Rechit1.energyHigh() - commonmode))/ ADCtoMIP[LAYER];
+			nineteencells_sum += ((Rechit1.energyHigh() - commonmode)) / ADCtoMIP[LAYER];
 
-                        x_tmp += CellCentreXY.first*((Rechit1.energyHigh() - commonmode) / ADCtoMIP[LAYER]);
-                        y_tmp += CellCentreXY.second*((Rechit1.energyHigh() - commonmode) / ADCtoMIP[LAYER]);
+			x_tmp += CellCentreXY.first * ((Rechit1.energyHigh() - commonmode) / ADCtoMIP[LAYER]);
+			y_tmp += CellCentreXY.second * ((Rechit1.energyHigh() - commonmode) / ADCtoMIP[LAYER]);
 			nineteennum++;
 		}
-	
-		if(((Rechit1.energyHigh() - commonmode)/ADCtoMIP[LAYER]) > CMTHRESHOLD)    {
-    	          int cellID[]={(Rechit1.id()).iu(),(Rechit1.id()).iv(),(Rechit1.id()).layer()};
-                  CLHEP::Hep3Vector pos( CellCentreXY.first, CellCentreXY.second, cellID[2] );
-
-      		  MyHGCalRecHit* aHit=new MyHGCalRecHit( cellID, pos, Rechit1.energyLow(), (Rechit1.energyHigh() - commonmode)/ADCtoMIP[LAYER], Rechit1.time() );
-     			 rechitVec.push_back(aHit);
-   		         totEnergy+=(Rechit1.energyHigh() - commonmode)/ADCtoMIP[LAYER];
-    }
-
 	}
 
 	AllCells[LAYER][EVENT] = allcells_sum;
 	SevenCells[LAYER][EVENT] = sevencells_sum;
-	NineteenCells[LAYER][EVENT] = nineteencells_sum;	
-
-        if(nineteennum> 1 &&  nineteencells_sum > 0) X_Layer[LAYER][EVENT] = x_tmp/nineteencells_sum ;  
-        if(nineteennum> 1 &&  nineteencells_sum > 0) Y_Layer[LAYER][EVENT] = y_tmp/nineteencells_sum ;
-
-	  std::vector<HGCalTBCluster2D*> clusters;
-  clusteringAlgo->Run(rechitVec,clusters);
-  if( !clusters.empty() ){
-    std::sort( clusters.begin(), clusters.end(), sorter.sort );
-    std::vector<HGCalTBCluster2D*>::iterator iter=clusters.begin();
-    HGCalTBCluster2D *emCluster=(*iter);
-    if( emCluster->getHighGainEnergy() > NINETEENCELLS_THRESHOLD ){
-      h_clusterEnergy_all->Fill( emCluster->getHighGainEnergy() );
-      h_clusterEnergyLow_all->Fill( emCluster->getLowGainEnergy() );
-      h_clusterSize_all->Fill( emCluster->getHits().size() );
-      h_NhitVsClusterEnergy->Fill( emCluster->getHighGainEnergy(), emCluster->getHits().size() );
-      h_NhitVsTotEnergy->Fill( totEnergy, emCluster->getHits().size() );
-      h_ClusterEnergyVsTotEnergy->Fill( totEnergy , emCluster->getHighGainEnergy() );
-      h_layer_clusterEnergy[ emCluster->getLayerID()-1 ]->Fill( emCluster->getHighGainEnergy() );
-    }
-    if( clusters.size()>=2 ){
-      std::advance(iter,1);
-      HGCalTBCluster2D *em2ndCluster=(*iter);
-      if( em2ndCluster->getHighGainEnergy() > NINETEENCELLS_THRESHOLD )
-        h_2ndclusterEnergy_all->Fill( em2ndCluster->getHighGainEnergy() );
-      if( em2ndCluster->getHighGainEnergy()>emCluster->getHighGainEnergy() ){
-        std::cout << "Problem in sorting clusters with energy -> std::abort()" << std::endl;
-        std::abort();
-      }
-    }
-    h_nclusters_all->Fill(clusters.size());
-  }
-  //std::cout << clusters.size() << " clusters found" << std::endl;
-  for( std::vector<HGCalTBCluster2D*>::iterator it=clusters.begin(); it!=clusters.end(); ++it ){
-    for( std::vector<HGCalTBCluster2D*>::iterator jt=it+1; jt!=clusters.end(); ++jt ){
-      float dist=distCluster.getDistance( (*it),(*jt) );
-      h_minDistance->Fill( dist );
-      //std::cout << "Min dist = " << dist << std::endl;
-    }
-    //std::cout << "" << std::endl;
-    //for(std::vector<MyHGCalRecHit*>::iterator jt=(*it)->getHits().begin(); jt!=(*it)->getHits().end(); ++jt)
-    //  std::cout << "...\t hit " << (*jt)->getCellID()[0] << ", " << (*jt)->getCellID()[1] << "\t"
-    //          << "... energy = " << (*jt)->getHighGainEnergy() << std::endl;
-    delete (*it);
-  }
-  //  getchar();
-  for( std::vector<MyHGCalRecHit*>::iterator it=rechitVec.begin(); it!=rechitVec.end(); ++it )
-    delete (*it);
-  rechitVec.clear();
+	NineteenCells[LAYER][EVENT] = nineteencells_sum;
+	if(nineteennum > 1 &&  nineteencells_sum > 0) X_Layer[LAYER][EVENT] = x_tmp / nineteencells_sum ;
+	if(nineteennum > 1 &&  nineteencells_sum > 0) Y_Layer[LAYER][EVENT] = y_tmp / nineteencells_sum ;
 
 }// analyze ends here
 
@@ -511,14 +380,14 @@ Layer_Sum_Analyzer::beginJob()
 		throw cms::Exception("Unable to load electronics map");
 	}
 
-        for(int iii = 0; iii< 16;iii++)
-            ADCtoMIP[iii] = ADCtoMIP[iii]/1.3; // Converting response to 120 GeV protons to MIPs
-/*
-        for(int iii= 0; iii<16;iii++){
-            LayerWeight[iii] += 0.8;
-            LayerSumWeight += LayerWeight[iii];
-           }
-*/
+	for(int iii = 0; iii < 16; iii++)
+		ADCtoMIP[iii] = ADCtoMIP[iii] / 1.3; // Converting response to 120 GeV protons to MIPs
+	/*
+	        for(int iii= 0; iii<16;iii++){
+	            LayerWeight[iii] += 0.8;
+	            LayerSumWeight += LayerWeight[iii];
+	           }
+	*/
 
 
 }
@@ -527,73 +396,72 @@ Layer_Sum_Analyzer::beginJob()
 void
 Layer_Sum_Analyzer::endJob()
 {
-
 	double allcells, sevencells, nineteencells;
 	bool doAllCells, do7Cells, do19Cells;
-        ofstream fs1;
-        fs1.open("/home/daq/CMSSW_8_0_1/src/HGCal/HGC_CERN_Time_Synch.txt"); 
-        fs1<<"# "<<"Event Num"<<"\t"<<"Time(us)"<<"\t"<<"Delta t(us)"<<"\t"<<"Cluster x[cm]"<<"\t"<<"Cluster y[cm]"<<endl;
-	for(int event = 0; event < (SPILL + 1) * EVENTSPERSPILL; event++){
+	// ofstream fs1;
+	// fs1.open("/home/daq/CMSSW_8_0_1/src/HGCal/HGC_CERN_Time_Synch.txt");
+	// fs1 << "# " << "Event Num" << "\t" << "Time(us)" << "\t" << "Delta t(us)" << "\t" << "Cluster x[cm]" << "\t" << "Cluster y[cm]" << endl;
+	for(int event = 0; event < (SPILL + 1) * EVENTSPERSPILL; event++) {
 		allcells = sevencells = nineteencells = 0.;
 		doAllCells = do7Cells = do19Cells = false;
 //                fs1<<event+1<<"\t"<<200*Time_Stamp[event+1]/1000.<<"\t"<<200*Delta_Time_Stamp[event+1]/1000.<<endl;//division by 1000 to covert from ns --> us
 
-		for(int layer = 0; layer < MAXLAYERS; layer++){
+		for(int layer = 0; layer < MAXLAYERS; layer++) {
 			allcells += AllCells[layer][event];
 			sevencells += SevenCells[layer][event];
 			nineteencells += NineteenCells[layer][event];
 		}
 
-		if(ELECTRONS || !PIONS){
-			if(allcells >= ALLCELLS_THRESHOLD){
+		if(ELECTRONS || !PIONS) {
+			if(allcells >= ALLCELLS_THRESHOLD) {
 				h_sum_all->Fill(allcells);
 				doAllCells = true;
 			}
-			if(sevencells >= SEVENCELLS_THRESHOLD){
+			if(sevencells >= SEVENCELLS_THRESHOLD) {
 				h_seven_all->Fill(sevencells);
 				do7Cells  = true;
 			}
-			if(nineteencells >= NINETEENCELLS_THRESHOLD){
-				h_nineteen_all->Fill(nineteencells/LayerSumWeight);
+			if(nineteencells >= NINETEENCELLS_THRESHOLD) {
+				h_nineteen_all->Fill(nineteencells / LayerSumWeight);
 				do19Cells = true;
 			}
 		}
 
-		if(PIONS){
-			if(allcells <= ALLCELLS_THRESHOLD && allcells >= PION_ALLCELLS_THRESHOLD){
+		if(PIONS) {
+			if(allcells <= ALLCELLS_THRESHOLD && allcells >= PION_ALLCELLS_THRESHOLD) {
 				h_sum_all->Fill(allcells);
 				doAllCells = true;
 			}
-			if(sevencells <= SEVENCELLS_THRESHOLD && allcells >= PION_7CELLS_THRESHOLD){
+			if(sevencells <= SEVENCELLS_THRESHOLD && allcells >= PION_7CELLS_THRESHOLD) {
 				h_seven_all->Fill(sevencells);
 				do7Cells  = true;
 			}
-			if(nineteencells <= NINETEENCELLS_THRESHOLD && allcells >= PION_19CELLS_THRESHOLD){
-				h_nineteen_all->Fill(nineteencells/LayerSumWeight);
+			if(nineteencells <= NINETEENCELLS_THRESHOLD && allcells >= PION_19CELLS_THRESHOLD) {
+				h_nineteen_all->Fill(nineteencells / LayerSumWeight);
 				do19Cells = true;
 			}
 		}
 
-                
-		for(int layer = 0; layer < MAXLAYERS; layer++){
-			if(doAllCells){
+
+		for(int layer = 0; layer < MAXLAYERS; layer++) {
+			if(doAllCells) {
 				h_sum_layer[layer]->Fill(AllCells[layer][event]);
 			}
-			if(do7Cells){
+			if(do7Cells) {
 				h_layer_seven[layer]->Fill(SevenCells[layer][event]);
 			}
-			if(do19Cells){
+			if(do19Cells) {
 				h_layer_nineteen[layer]->Fill(NineteenCells[layer][event]);
-                                h_x_layer[layer]->Fill(X_Layer[layer][event]);
-                                h_y_layer[layer]->Fill(Y_Layer[layer][event]);
-				h_x_y_layer[layer]->Fill(X_Layer[layer][event],Y_Layer[layer][event]);
-                                cout<<endl<<"   "<<layer<<"     "<<X_Layer[layer][event]<<"     "<<Y_Layer[layer][event]<<endl;
-                                fs1<<event+1<<"\t"<<200*Time_Stamp[event+1]/1000.<<"\t"<<200*Delta_Time_Stamp[event+1]/1000.<<"\t"<<X_Layer[layer][event]<<"\t"<<Y_Layer[layer][event]<<endl;                               
+				h_x_layer[layer]->Fill(X_Layer[layer][event]);
+				h_y_layer[layer]->Fill(Y_Layer[layer][event]);
+				h_x_y_layer[layer]->Fill(X_Layer[layer][event], Y_Layer[layer][event]);
+				cout << endl << "   " << layer << "     " << X_Layer[layer][event] << "     " << Y_Layer[layer][event] << endl;
+				// fs1 << event + 1 << "\t" << 200 * Time_Stamp[event + 1] / 1000. << "\t" << 200 * Delta_Time_Stamp[event + 1] / 1000. << "\t" << X_Layer[layer][event] << "\t" << Y_Layer[layer][event] << endl;
 //                                fs1<<event<<"	"<<layer<<"	"<<X_Layer[layer][event]<<"	"<<Y_Layer[layer][event]<<"	"<<Layer_Z[layer]<<"	"<<endl;
 			}
 		}
 	}
-fs1.close();		
+	// fs1.close();
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
