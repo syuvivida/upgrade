@@ -16,6 +16,10 @@ cp ~rchatter/public/Ped_*Gain_L*.txt CondObjects/data
 cp ~rchatter/public/Layer_Sum_Analyzer.cc Reco/plugins
 cp ~rchatter/public/test_cfg.py .
 curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/plugin/Layer_Sum_Analyzer.cc -o Reco/plugins/Layer_Sum_Analyzer.cc
+curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/interface/Clustering.h -o Reco/interface/Clustering.h
+curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/interface/ClusteringHelper.h -o Reco/interface/ClusteringHelper.h
+curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/interface/HGCalTBCluster2D.h -o DataFormats/interface/HGCalTBCluster2D.h 
+curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/interface/MyHGCalRecHit.h -o DataFormats/interface/MyHGCalRecHit.h
 ```
 
 ### Change default parameters
