@@ -7,7 +7,6 @@ cmsrel CMSSW_8_0_1
 cd CMSSW_8_0_1/src
 git cms-init
 git clone https://github.com/CMS-HGCAL/TestBeam HGCal/
-curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/plugin/Layer_Sum_Analyzer.cc -o HGCal/Reco/plugins/Layer_Sum_Analyzer.cc
 cd HGCal
 git checkout FNAL_TB_16Layers
 git pull
@@ -15,6 +14,7 @@ rm -f RawToDigi/plugins/DigiPlotter_New.cc
 cp ~rchatter/public/Ped_*Gain_L*.txt CondObjects/data
 cp ~rchatter/public/Layer_Sum_Analyzer.cc Reco/plugins
 cp ~rchatter/public/test_cfg.py .
+curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/plugin/Layer_Sum_Analyzer.cc -o Reco/plugins/Layer_Sum_Analyzer.cc
 ```
 
 ### Change default parameters
