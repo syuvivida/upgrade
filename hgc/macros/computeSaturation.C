@@ -125,8 +125,8 @@ void computeSaturation(string inputFile, string histoPrefix="HighGain_LowGain_2D
 
       if(ispf)
 	{
-	  fitptr_lo=h2D[il][ic][it] ->Fit("flo","S","",0,150); 
-	  fitptr_hi=h2D[il][ic][it] ->Fit("fhi","S","",250,400); 
+	  fitptr_lo=((TProfile*)h2D[il][ic][it]) ->Fit("flo","S","",0,150); 
+	  fitptr_hi=((TProfile*)h2D[il][ic][it]) ->Fit("fhi","S","",250,400); 
 	}
       else
 	{
