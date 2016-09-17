@@ -5,6 +5,7 @@ Go to a cms evironment enabled area(lxplus)
 ```
 cmsrel CMSSW_8_0_1
 cd CMSSW_8_0_1/src
+cmsenv
 git cms-init
 git clone https://github.com/CMS-HGCAL/TestBeam HGCal/
 cd HGCal
