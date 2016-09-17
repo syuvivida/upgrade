@@ -15,11 +15,11 @@ cmsenv
 scramv1 b -j 8
 
 ### To run the code
-
+```
 cd HGCalc
 curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layers_8/hgc/python/test_cfg.py -o test_cfg.py
-cmsRun test_cfg.py nSpills=15 chainSequence=4 pedestalsHighGain=CondObjects/data/Ped_HighGain_L8.txt pedestalsLowGain=CondObjects/data/Ped_LowGain_L8.txt runNumber=1058 runType=HGCRun particle=electron energy=250GeV
-
+cmsRun test_cfg.py nSpills=15 chainSequence=4 pedestalsHighGain=CondObjects/data/Ped_HighGain_L8.txt pedestalsLowGain=CondObjects/data/Ped_LowGain_L8.txt runNumber=1296 runType=HGCRun particle=electron energy=250GeV
+```
 ### If you need to run many runs
 Find out the beam type and beam energy your runs correspond to, for example, if it is an electrob beam with energy 250 GeV
 create a directory under CMSSW_8_0_1/src
