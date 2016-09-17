@@ -49,7 +49,7 @@ cd data/electron/250GeV
 ```
 Now you could copy text files over to this area and go back to the original directory to launch your job
 ```
-cd ../../HGCal
+cd ../../../HGCal
 curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/python/test_cfg.py -o test_cfg.py
 cmsRun test_cfg.py PARTICLE=electron ENERGY=250GeV RUNNUMBER=666
 ```
