@@ -36,12 +36,13 @@ Change the two pedestal files to Ped_LowGain_L1.txt and Ped_HighGain_L1.txt
 
  
 ### Compile 
+```
 cd ..
 cmsenv
 cd HGCal
 scramv1 b clean
 scram b -j32
-
+```
 ### To run the job
 ```
 curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/python/test_cfg.py -o test_cfg.py
