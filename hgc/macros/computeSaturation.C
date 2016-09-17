@@ -150,7 +150,7 @@ void computeSaturation(string inputFile, string histoPrefix="HighGain_LowGain_2D
       double slope = flo->GetParameter(0);
       double slopeerr = flo->GetParError(0);
 
-      fout_slope << runNumber << " " << il << " " << ic << " " << it << " " << slope << " " << slopeerr << endl;
+      fout_slope << runNumber << " " << il+1 << " " << ic+1 << " " << it << " " << slope << " " << slopeerr << endl;
       
       } // loop over number of cell types
     } // end of loop over skiroc chips
