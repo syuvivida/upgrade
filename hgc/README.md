@@ -36,7 +36,10 @@ Change the two pedestal files to Ped_LowGain_L1.txt and Ped_HighGain_L1.txt
 
  
 ### Compile 
-
+cd ..
+cmsenv
+cd HGCal
+scramv1 b clean
 scram b -j32
 
 ### To run the job
