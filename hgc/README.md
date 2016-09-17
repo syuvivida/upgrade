@@ -44,13 +44,20 @@ scram b -j32
 ```
 ### To run the job
 ```
+cd ../../
 mkdir -p data/electron/250GeV
 cd data/electron/250GeV
 ```
 Now you could copy text files over to this area and go back to the original directory to launch your job
 ```
-cd ../../../HGCal
+cd ../../../
+cd CMSSW_8_0_1/src/HGCal
 curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/python/test_cfg.py -o test_cfg.py
+```
+
+Modify the path of input data file in test_cfg.py
+
+```
 cmsRun test_cfg.py PARTICLE=electron ENERGY=250GeV RUNNUMBER=666
 ```
 ### If you want to run on many text files at the same time
