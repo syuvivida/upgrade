@@ -177,19 +177,22 @@ Layer_Sum_Analyzer::Layer_Sum_Analyzer(const edm::ParameterSet& iConfig)
 		    stringstream name3;
 		    name3 << "pf_HighGain_LowGain_2D_lcc" << layer+1 << Form("%02i",ik+1) << Form("%02i",ij);
 		    pf_HighGain_LowGain_2D_lcc[layer][ik][ij] = fs->make<TProfile>(name3.str().c_str(), name3.str().c_str(),4000,0,4000);
-
+		    pf_HighGain_LowGain_2D_lcc[layer][ik][ij] -> Sumw2();
 // 		    stringstream name4;
 // 		    name4 << "pf_HighGain_LowGain_2D_cmremoved_lcc" << layer+1 << Form("%02i",ik+1) << Form("%02i",ij);
 // 		    pf_HighGain_LowGain_2D_cmremoved_lcc[layer][ik][ij] = fs->make<TProfile>(name4.str().c_str(), name4.str().c_str(),4000,0,4000);
-
+//                  pf_HighGain_LowGain_2D_cmremoved_lcc[layer][ik][ij] -> Sumw2();
 		  } // end of loop over channels, 0-63                                                                                                                                
 		  for(int im= 0; im < NTYPES; im++){
 		    stringstream name3;
 		    name3 << "HighGain_LowGain_2D_lct" << layer+1 << Form("%02i",ik+1) << Form("%02i",im);
 		    HighGain_LowGain_2D_lct[layer][ik][im] = fs->make<TH2F>(name3.str().c_str(), name3.str().c_str(),4000,0,4000,4000,0,4000);
+		    HighGain_LowGain_2D_lct[layer][ik][im] -> Sumw2();
+
 		    stringstream name4;
 		    name4 << "pf_HighGain_LowGain_2D_cmremoved_lct" << layer+1 << Form("%02i",ik+1) << Form("%02i",im);
 		    pf_HighGain_LowGain_2D_cmremoved_lct[layer][ik][im] = fs->make<TProfile>(name4.str().c_str(), name4.str().c_str(),4000,0,4000);
+		    pf_HighGain_LowGain_2D_cmremoved_lct[layer][ik][im] -> Sumw2();
 
 		  } // end of loop over types                                                                                                                                         
 		} // end loop over skirocs   
