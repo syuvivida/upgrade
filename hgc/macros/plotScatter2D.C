@@ -12,7 +12,7 @@
 using namespace std;
 
 
-void plotScatter2D(string inputFile, string histoPrefix="HighGain_LowGain_2D_type4")
+void plotScatter2D(string inputFile, string histoPrefix="HighGain_LowGain_2D_lct10100")
 {
   setNCUStyle();
   TH2F* h2D;
@@ -25,11 +25,12 @@ void plotScatter2D(string inputFile, string histoPrefix="HighGain_LowGain_2D_typ
   gStyle->SetOptStat(0);
 
   TCanvas* c1 = new TCanvas("c1","",500,500);
-  h2D->SetTitle(Form("%s, cell type 4, position 4",prefix.Data()));
+  h2D->SetTitle(Form("%s, layer 1, skiroc 1, cell type 0",prefix.Data()));
   h2D->SetXTitle("Low-Gain ADC counts");
   h2D->SetYTitle("High-Gain ADC counts");
   h2D->SetTitleOffset(1.6,"Y");
   h2D->Draw();
+  gSystem->mkdir("figures");
   string output= "figures/scatter2D_" + prefix_string + "_" + histoPrefix;
   string outputFile = output + ".pdf";
   c1->Print(outputFile.data());
