@@ -298,8 +298,8 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 
 	}//Rechit loop ends here
 
-	commonmode /= cm_num;
-	commonmode_LG /= cm_num_LG; // added by Eiko
+	commonmode = cm_num==0? 0: commonmode/cm_num;
+	commonmode_LG = cm_num_LG==0? 0: commonmode_LG/cm_num_LG; // added by Eiko
 	
 	// std::cout << "common mode = " << commonmode << std::endl;                                                                                                            
         // std::cout << "commonmode_LG = " << commonmode_LG << std::endl;                                                                                                       
