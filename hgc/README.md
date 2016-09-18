@@ -16,6 +16,7 @@ git pull
 rm -f RawToDigi/plugins/DigiPlotter_New.cc
 cp ~rchatter/public/Ped_*Gain_L*.txt CondObjects/data
 mkdir -p Reco/interface/
+rm -rf Reco/plugins/Layer_Sum_Analyzer.cc
 curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/plugin/Layer_Sum_Analyzer.cc -o Reco/plugins/Layer_Sum_Analyzer.cc
 curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/interface/Clustering.h -o Reco/interface/Clustering.h
 curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layer_1/hgc/interface/ClusteringHelper.h -o Reco/interface/ClusteringHelper.h
