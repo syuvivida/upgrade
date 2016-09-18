@@ -145,7 +145,7 @@ void computeSaturation(string inputFile, string histoPrefix="HighGain_LowGain_2D
       cout << "LG cut off = " << LG_cutoff[0] << " +- " << LG_cutoff[1] << endl;
       cout << "HG cut off = " << HG_cutoff[0] << " +- " << HG_cutoff[1] << endl;
 
-      fout << runNumber << " " << it << " " << LG_cutoff[0] << " " << LG_cutoff[1] << " " << HG_cutoff[0] << " " << HG_cutoff[1] << endl;
+      fout << runNumber << " " << il+1 << " " << ic+1 << " " << it << " " << LG_cutoff[0] << " " << LG_cutoff[1] << " " << HG_cutoff[0] << " " << HG_cutoff[1] << endl;
 
       double slope = flo->GetParameter(0);
       double slopeerr = flo->GetParError(0);
