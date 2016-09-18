@@ -6,6 +6,7 @@ Go to a cms evironment enabled area(lxplus)
 cmsrel CMSSW_8_0_1
 cd CMSSW_8_0_1/src/
 git clone git@github.com:CMS-HGCAL/TestBeam.git HGCal
+rm -rf HGCal/Reco/plugins/Layer_Sum_Analyzer.cc
 curl https://raw.githubusercontent.com/syuvivida/upgrade/HGCTB_Layers_8/hgc/plugin/Layer_Sum_Analyzer.cc -o HGCal/Reco/plugins/Layer_Sum_Analyzer.cc
 ```
 
