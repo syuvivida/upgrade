@@ -122,17 +122,26 @@ void computeSaturation(string inputFile, string histoPrefix="HighGain_LowGain_2D
       TFitResultPtr fitptr_lo;
       TFitResultPtr fitptr_hi;
       bool ispf = h2D[il][ic][it]->InheritsFrom(TProfile::Class());
-
+      TProfile* pfx;
       if(ispf)
 	{
-	  fitptr_lo=((TProfile*)h2D[il][ic][it]) ->Fit("flo","S","",0,150); 
-	  fitptr_hi=((TProfile*)h2D[il][ic][it]) ->Fit("fhi","S","",250,400); 
+	  pfx = (TProfile*)h2D[il][ic][it];
+
+	  fitptr_lo= pfx->Fit("flo","S","",0,150); 
+	  if(!(TF1*)pfx->GetFunction("flo"))continue;
+
+	  fitptr_hi= pfx ->Fit("fhi","S","",250,400); 
+	  if(!(TF1*)pfx->GetFunction("fhi"))continue;
 	}
       else
 	{
-	  TProfile* pfx = ((TH2F*)h2D[il][ic][it])->ProfileX();
+	  pfx = ((TH2F*)h2D[il][ic][it])->ProfileX();
+
 	  fitptr_lo=pfx ->Fit("flo","S","",0,150); 
+	  if(!(TF1*)pfx->GetFunction("flo"))continue;
+
 	  fitptr_hi=pfx ->Fit("fhi","S","",250,400); 
+	  if(!(TF1*)pfx->GetFunction("fhi"))continue;
 	}
 
       TFitResult fitresult_lo = (*fitptr_lo);
