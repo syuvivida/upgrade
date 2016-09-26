@@ -44,13 +44,6 @@ void plotEnergyDependence(std::string histoName="HighGain_LowGain_2D_lct")
   const int NTYPES=6; // changed to 64 for channel dependences                                                                                                                   
   const int NLAYERS=8;
   const int NCHIPS=2;
-
-
-  std::vector<double> myLGs[NLAYERS][NCHIPS][NTYPES];
-  std::vector<double> myLGErrs[NLAYERS][NCHIPS][NTYPES];
-  std::vector<double> myHGs[NLAYERS][NCHIPS][NTYPES];
-  std::vector<double> myHGErrs[NLAYERS][NCHIPS][NTYPES];
-  std::vector<int> myRuns[NLAYERS][NCHIPS][NTYPES];
   
   std::map<int,RunInfo> myRunInfos[NLAYERS][NCHIPS][NTYPES];
 

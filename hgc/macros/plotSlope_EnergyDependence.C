@@ -43,12 +43,6 @@ void plotSlope_EnergyDependence(std::string histoName="HighGain_LowGain_2D_lct")
   const int NLAYERS=8;
   const int NCHIPS=2;
 
-
-  std::vector<double> myLGs[NLAYERS][NCHIPS][NTYPES];
-  std::vector<double> myLGErrs[NLAYERS][NCHIPS][NTYPES];
-  std::vector<double> myHGs[NLAYERS][NCHIPS][NTYPES];
-  std::vector<double> myHGErrs[NLAYERS][NCHIPS][NTYPES];
-  std::vector<int> myRuns[NLAYERS][NCHIPS][NTYPES];
   
   std::map<int,RunInfo> myRunInfos[NLAYERS][NCHIPS][NTYPES];
 
