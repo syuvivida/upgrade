@@ -248,16 +248,18 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 	int cm_num=0;
 
 	// added by Eiko for high/low gain
-	double commonmode_HG[NCHIPS][NTYPES], commonmode_LG[NCHIPS][NTYPES];
-	int cm_num_HG[NCHIPS][NTYPES];
-        int cm_num_LG[NCHIPS][NTYPES];
+	double commonmode_HG[MAXLAYERS][NCHIPS][NTYPES], commonmode_LG[MAXLAYERS][NCHIPS][NTYPES];
+	int cm_num_HG[MAXLAYERS][NCHIPS][NTYPES];
+        int cm_num_LG[MAXLAYERS][NCHIPS][NTYPES];
 	
-	for(int ic=0; ic<NCHIPS; ic++){
-	  for(int it=0; it<NTYPES; it++){
-	    commonmode_HG[ic][it]=0.;
-	    commonmode_LG[ic][it]=0.;
-	    cm_num_HG[ic][it]=0;
-	    cm_num_LG[ic][it]=0;	    
+	for(int il=0; il<MAXLAYERS; il++){
+	  for(int ic=0; ic<NCHIPS; ic++){
+	    for(int it=0; it<NTYPES; it++){
+	      commonmode_HG[il][ic][it]=0.;
+	      commonmode_LG[il][ic][it]=0.;
+	      cm_num_HG[il][ic][it]=0;
+	      cm_num_LG[il][ic][it]=0;
+	    }	    
 	  }
 	}
 
@@ -296,26 +298,27 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 		}
 
 		if((Rechit.energyHigh()) / ADCtoMIP[LAYER] <= CMTHRESHOLD) {		  
-		  commonmode_HG[skiroc_chip][type] += Rechit.energyHigh();
-		  cm_num_HG[skiroc_chip][type]++;
+		  commonmode_HG[n_layer][skiroc_chip][type] += Rechit.energyHigh();
+		  cm_num_HG[n_layer][skiroc_chip][type]++;
 		  commonmode += Rechit.energyHigh();
 		  cm_num++;
 		}
 		if((Rechit.energyLow())/ADCtoMIP[LAYER] <= LGCMTHRESHOLD){
-		  commonmode_LG[skiroc_chip][type] += Rechit.energyLow();
-		  cm_num_LG[skiroc_chip][type]++;
+		  commonmode_LG[n_layer][skiroc_chip][type] += Rechit.energyLow();
+		  cm_num_LG[n_layer][skiroc_chip][type]++;
                 }
 
 	}//Rechit loop ends here
 
 	commonmode = cm_num ==0? 0: commonmode/cm_num;
-	for(int ic=0; ic<NCHIPS; ic++){
-	  for(int it=0; it<NTYPES; it++){
-	    commonmode_HG[ic][it] = cm_num_HG[ic][it]==0? 0: commonmode_HG[ic][it]/cm_num_HG[ic][it];
-	    commonmode_LG[ic][it] = cm_num_LG[ic][it]==0? 0: commonmode_LG[ic][it]/cm_num_LG[ic][it]; // added by Eiko	
-	    // std::cout << "common mode_HG[" << ic << "][" << it << "] = " << commonmode_HG[ic][it] << std::endl; 
-	    // std::cout << "common mode_LG[" << ic << "][" << it << "] = " << commonmode_LG[ic][it] << std::endl;                                               
-	    
+	for(int il=0; il<MAXLAYERS; il++){
+	  for(int ic=0; ic<NCHIPS; ic++){
+	    for(int it=0; it<NTYPES; it++){
+	      commonmode_HG[il][ic][it] = cm_num_HG[il][ic][it]==0? 0: commonmode_HG[il][ic][it]/cm_num_HG[il][ic][it];
+	      commonmode_LG[il][ic][it] = cm_num_LG[il][ic][it]==0? 0: commonmode_LG[il][ic][it]/cm_num_LG[il][ic][it]; // added by Eiko	
+	      // std::cout << "common mode_HG[" << il << "]["<< ic << "][" << it << "] = " << commonmode_HG[il][ic][it] << std::endl; 
+	      // std::cout << "common mode_LG[" << il << "][" << ic << "][" << it << "] = " << commonmode_LG[il][ic][it] << std::endl;                                               
+	    }
 	  }
 	}
 
@@ -327,10 +330,10 @@ Layer_Sum_Analyzer::analyze(const edm::Event& event, const edm::EventSetup& setu
 	  int n_layer = (Rechit.id()).layer()-1;
 	  int skiroc_chip = (eid.iskiroc()-1)%2;
 	  //	  int chan = eid.ichan();
-	  pf_HighGain_LowGain_2D_cmremoved_lct[n_layer][skiroc_chip][type]->Fill(Rechit.energyLow()-commonmode_LG[skiroc_chip][type],
-									      Rechit.energyHigh()-commonmode_HG[skiroc_chip][type]);
-// 	  pf_HighGain_LowGain_2D_cmremoved_lcc[n_layer][skiroc_chip][chan]->Fill(Rechit.energyLow()-commonmode_LG[skiroc_chip][type],
-// 										 Rechit.energyHigh()-commonmode_HG[skiroc_chip][type]);
+	  pf_HighGain_LowGain_2D_cmremoved_lct[n_layer][skiroc_chip][type]->Fill(Rechit.energyLow()-commonmode_LG[n_layer][skiroc_chip][type],
+										 Rechit.energyHigh()-commonmode_HG[n_layer][skiroc_chip][type]);
+	  // 	  pf_HighGain_LowGain_2D_cmremoved_lcc[n_layer][skiroc_chip][chan]->Fill(Rechit.energyLow()-commonmode_LG[n_layer][skiroc_chip][type],
+	  // 										 Rechit.energyHigh()-commonmode_HG[n_layer][skiroc_chip][type]);
 
 	}
 
