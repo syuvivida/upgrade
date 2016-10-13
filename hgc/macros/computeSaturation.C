@@ -1,3 +1,8 @@
+
+//-------------------------------------------------------------
+// Authors: Shin-Shan Eiko Yu, Vieri Candelise 
+//-------------------------------------------------------------  
+
 #include <fstream>
 #include <iostream>
 #include <TH2.h>
@@ -76,7 +81,7 @@ void cutoff(double* locutoff, double* hicutoff, const TFitResult& low, const TFi
 }
 
 
-void computeSaturation(string inputFile, string histoPrefix="HighGain_LowGain_2D_lct")
+void computeSaturation(string inputFile, bool fitProfile=false,string histoPrefix="HighGain_LowGain_2D_lct")
 {
   bool hasType=false;
   if(histoPrefix.find("lct")!=std::string::npos)hasType=true;
@@ -93,16 +98,15 @@ void computeSaturation(string inputFile, string histoPrefix="HighGain_LowGain_2D
   TF1* fhi = new TF1("fhi","[0]*x+[1]");
   TString prefix=gSystem->GetFromPipe(Form("file=%s; test=${file##*/}; test2=${test%%_HGC*}; echo \"${test2}\"",inputFile.data()));
 
-  prefix = "profile_" + prefix;
+  if(fitProfile)
+    prefix = "profile_" + prefix;
 
   TString runNumber=gSystem->GetFromPipe(Form("file=%s; test2=${file%%_Reco.root*}; test=${test2##*_}; echo \"${test}\"",inputFile.data()));
 
   string runNumber_string = runNumber.Data();
-  string prefix_string = prefix.Data();
 
   // profile can only be done for large amount of data
 
-  //  cout << prefix_string << endl;
   ofstream fout;
   fout.open(Form("%s_%s.dat",prefix.Data(),histoPrefix.data()),ios::out | ios::app);
 
@@ -123,25 +127,33 @@ void computeSaturation(string inputFile, string histoPrefix="HighGain_LowGain_2D
       TFitResultPtr fitptr_hi;
       bool ispf = h2D[il][ic][it]->InheritsFrom(TProfile::Class());
       TProfile* pfx;
-      if(ispf)
+      if(ispf) // if the input is already TProfile
 	{
 	  pfx = (TProfile*)h2D[il][ic][it];
 
 	  fitptr_lo= pfx->Fit("flo","S","",0,150); 
 	  if(!(TF1*)pfx->GetFunction("flo"))continue;
 
-	  fitptr_hi= pfx ->Fit("fhi","S","",250,400); 
+	  fitptr_hi= pfx->Fit("fhi","S","",250,400); 
 	  if(!(TF1*)pfx->GetFunction("fhi"))continue;
 	}
-      else
+      else // if the input is a TH2F
 	{
-	  pfx = ((TH2F*)h2D[il][ic][it])->ProfileX();
-
-	  fitptr_lo=pfx ->Fit("flo","S","",0,150); 
-	  if(!(TF1*)pfx->GetFunction("flo"))continue;
-
-	  fitptr_hi=pfx ->Fit("fhi","S","",250,400); 
-	  if(!(TF1*)pfx->GetFunction("fhi"))continue;
+	  if(fitProfile)
+	    {
+	      pfx = ((TH2F*)h2D[il][ic][it])->ProfileX();	  
+	      fitptr_lo= pfx->Fit("flo","S","",0,150); 
+	      if(!(TF1*)pfx->GetFunction("flo"))continue;
+	      fitptr_hi= pfx->Fit("fhi","S","",250,400); 
+	      if(!(TF1*)pfx->GetFunction("fhi"))continue;
+	    }
+	  else
+	    {
+	      fitptr_lo= ((TH2F*)h2D[il][ic][it])->Fit("flo","S","",0,150); 
+	      if(!(TF1*)(((TH2F*)h2D[il][ic][it])->GetFunction("flo")))continue;
+	      fitptr_hi= ((TH2F*)h2D[il][ic][it])->Fit("fhi","S","",250,400); 
+	      if(!(TF1*)(((TH2F*)h2D[il][ic][it])->GetFunction("fhi")))continue;
+	    }
 	}
 
       TFitResult fitresult_lo = (*fitptr_lo);
