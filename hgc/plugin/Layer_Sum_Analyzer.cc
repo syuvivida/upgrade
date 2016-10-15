@@ -6,6 +6,9 @@
 	@Author: Ryan Quinn <ryan>
 		7 July 2016
 		quinn@physics.umn.edu
+		
+		With modifications by
+                Shin-Shan Eiko Yu <syu@cern.ch> and Vieri Candelise <vieri.candelise@cern.ch>
 */
 
 
